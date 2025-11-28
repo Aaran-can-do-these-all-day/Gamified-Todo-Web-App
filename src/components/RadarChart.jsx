@@ -52,12 +52,6 @@ function RadarChart() {
           </RechartsRadar>
         </ResponsiveContainer>
       </div>
-      
-      <div className="text-center mt-2">
-        <span className="text-xs text-gray-500">
-          <span className="text-yellow-400">⚡</span> Powered by ChartBase
-        </span>
-      </div>
     </div>
   )
 }
