@@ -20,7 +20,7 @@ function Dashboard() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <div className="mb-3">
+              <div className="mb-3 text-center">
                 <h2 className="font-display text-3xl md:text-4xl font-bold tracking-wider bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                   PLAYER
                 </h2>
@@ -33,7 +33,7 @@ function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="mb-3">
+              <div className="mb-3 text-center">
                 <h2 className="font-display text-3xl md:text-4xl font-bold tracking-wider bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
                   STATISTICS
                 </h2>
@@ -46,7 +46,7 @@ function Dashboard() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="mb-3">
+              <div className="mb-3 text-center">
                 <h2 className="font-display text-3xl md:text-4xl font-bold tracking-wider bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
                   SYSTEM
                 </h2>
