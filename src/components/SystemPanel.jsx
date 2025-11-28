@@ -12,7 +12,7 @@ function SystemPanel() {
   ]
 
   return (
-    <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col">
+    <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col max-h-[420px]">
       <div className="p-4 flex-1 overflow-y-auto">
         <div className="flex items-center justify-end mb-4">
           <Power className="w-5 h-5 text-gray-400" />

@@ -14,7 +14,7 @@ function RadarChart() {
   ]
 
   return (
-    <div className="bg-dark-800/80 rounded-lg border border-white/10 p-6 h-full flex flex-col">
+    <div className="bg-dark-800/80 rounded-lg border border-white/10 p-6 h-full flex flex-col max-h-[420px]">
       <div className="text-center mb-2">
         <p className="text-[10px] text-gray-500 tracking-widest uppercase">
           "THE SYSTEM USES ME, AND I USE THE SYSTEM"

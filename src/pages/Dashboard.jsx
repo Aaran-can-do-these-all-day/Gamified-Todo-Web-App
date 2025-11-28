@@ -14,7 +14,7 @@ function Dashboard() {
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-max">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
