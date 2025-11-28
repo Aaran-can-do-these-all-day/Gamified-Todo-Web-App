@@ -74,24 +74,24 @@ function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="mt-12"
         >
-          <div className="text-center mb-6">
-            <h2 className="font-display text-3xl md:text-4xl font-bold tracking-wider bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+          <div className="text-center mb-8">
+            <h2 className="font-display text-3xl md:text-4xl font-bold tracking-wider bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               NAVIGATION
             </h2>
-            <p className="text-gray-500 text-sm mt-1 tracking-widest">ナビゲーション</p>
+            <p className="text-gray-500 text-sm mt-2 tracking-widest">ナビゲーション</p>
           </div>
           <NavigationCards />
+          <div className="flex justify-center gap-2 mt-8">
+            <div className="w-2 h-2 rounded-full bg-white"></div>
+            <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+            <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+            <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+            <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+            <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+          </div>
         </motion.div>
-
-        <div className="flex justify-center gap-2 mt-8">
-          <div className="w-2 h-2 rounded-full bg-gray-600"></div>
-          <div className="w-2 h-2 rounded-full bg-white"></div>
-          <div className="w-2 h-2 rounded-full bg-gray-600"></div>
-          <div className="w-2 h-2 rounded-full bg-gray-600"></div>
-          <div className="w-2 h-2 rounded-full bg-gray-600"></div>
-          <div className="w-2 h-2 rounded-full bg-gray-600"></div>
-        </div>
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
-import { Power, Flame, Sword, Target } from 'lucide-react'
+import { Power, Flame, Sword, Target, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
 
 const navItems = [
   { 
@@ -8,11 +9,9 @@ const navItems = [
     label: 'Awakening', 
     vertical: 'AWAKENING',
     japanese: '限界を超えで',
-    topColor: 'bg-gradient-to-br from-blue-500/60 via-cyan-500/40 to-cyan-600/20',
-    bottomColor: 'bg-gradient-to-tr from-cyan-500/60 via-teal-500/40 to-blue-600/20',
-    barGradient: 'from-cyan-600 to-blue-600',
-    accentColor: 'text-cyan-400',
-    borderColor: 'border-cyan-500/40'
+    topGradient: 'from-blue-600 via-blue-500 to-cyan-500',
+    bottomGradient: 'from-cyan-600 via-teal-500 to-blue-600',
+    accentColor: 'text-cyan-400'
   },
   { 
     path: '/habits', 
@@ -20,11 +19,9 @@ const navItems = [
     label: 'Habits', 
     vertical: 'HABITS',
     japanese: '毎日の習慣',
-    topColor: 'bg-gradient-to-br from-orange-500/60 via-amber-500/40 to-yellow-600/20',
-    bottomColor: 'bg-gradient-to-tr from-red-500/60 via-orange-500/40 to-amber-600/20',
-    barGradient: 'from-orange-600 to-red-600',
-    accentColor: 'text-orange-400',
-    borderColor: 'border-orange-500/40'
+    topGradient: 'from-orange-600 via-orange-500 to-amber-500',
+    bottomGradient: 'from-red-600 via-orange-500 to-yellow-600',
+    accentColor: 'text-orange-400'
   },
   { 
     path: '/quests', 
@@ -32,11 +29,9 @@ const navItems = [
     label: 'Quests', 
     vertical: 'QUESTS',
     japanese: 'クエスト',
-    topColor: 'bg-gradient-to-br from-purple-500/60 via-purple-400/40 to-violet-600/20',
-    bottomColor: 'bg-gradient-to-tr from-pink-500/60 via-purple-500/40 to-violet-600/20',
-    barGradient: 'from-purple-600 to-pink-600',
-    accentColor: 'text-purple-400',
-    borderColor: 'border-purple-500/40'
+    topGradient: 'from-purple-600 via-purple-500 to-pink-500',
+    bottomGradient: 'from-pink-600 via-purple-500 to-violet-600',
+    accentColor: 'text-purple-400'
   },
   { 
     path: '/gates', 
@@ -44,84 +39,111 @@ const navItems = [
     label: 'Gates', 
     vertical: 'GATES',
     japanese: 'ゲート',
-    topColor: 'bg-gradient-to-br from-red-500/60 via-rose-500/40 to-red-600/20',
-    bottomColor: 'bg-gradient-to-tr from-rose-500/60 via-red-500/40 to-orange-600/20',
-    barGradient: 'from-red-600 to-rose-600',
-    accentColor: 'text-red-400',
-    borderColor: 'border-red-500/40'
+    topGradient: 'from-red-600 via-red-500 to-rose-500',
+    bottomGradient: 'from-red-600 via-orange-500 to-rose-600',
+    accentColor: 'text-red-400'
   },
 ]
 
 function NavigationCards() {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-      {navItems.map((item) => {
-        const Icon = item.icon
-        return (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={`group relative overflow-hidden rounded-xl bg-dark-900/60 border ${item.borderColor} hover:border-white/30 transition-all duration-300`}
-          >
-            <div className="aspect-[3/5] flex flex-col relative">
-              {/* Vertical text left side */}
-              <div className="absolute top-4 left-3 z-30 flex flex-col gap-0.5">
-                {item.vertical.split('').map((letter, i) => (
-                  <span 
-                    key={i} 
-                    className="text-[9px] text-white/70 font-bold tracking-wider leading-tight"
-                  >
-                    {letter}
-                  </span>
-                ))}
-              </div>
+  const [scrollPos, setScrollPos] = useState(0)
 
-              {/* Vertical Japanese text right side */}
-              <div className="absolute top-3 right-2 z-30">
-                <div className="writing-vertical text-[8px] text-white/50 tracking-wider font-medium leading-relaxed">
-                  {item.japanese}
+  const scroll = (direction) => {
+    const container = document.getElementById('nav-carousel')
+    if (container) {
+      const scrollAmount = 250
+      const newPos = scrollPos + (direction === 'left' ? -scrollAmount : scrollAmount)
+      container.scrollTo({ left: newPos, behavior: 'smooth' })
+      setScrollPos(newPos)
+    }
+  }
+
+  return (
+    <div className="relative w-full">
+      {/* Left Arrow */}
+      <button 
+        onClick={() => scroll('left')}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-dark-700/90 border border-white/20 flex items-center justify-center text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+
+      {/* Carousel Container */}
+      <div 
+        id="nav-carousel"
+        className="flex overflow-x-auto gap-6 px-20 py-4 scrollbar-hide"
+      >
+        {navItems.map((item) => {
+          const Icon = item.icon
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className="group relative flex-shrink-0 overflow-hidden rounded-lg bg-dark-900 border border-white/10 hover:border-white/30 transition-all duration-300"
+              style={{ width: '200px' }}
+            >
+              <div className="aspect-[3/5] flex flex-col relative">
+                {/* Vertical text on LEFT */}
+                <div className="absolute top-6 left-3 z-30 flex flex-col gap-0.5">
+                  {item.vertical.split('').map((letter, i) => (
+                    <span 
+                      key={i} 
+                      className="text-[10px] text-white/75 font-bold tracking-wider"
+                    >
+                      {letter}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Japanese text on RIGHT (vertical) */}
+                <div className="absolute top-5 right-2 z-30">
+                  <div className="writing-vertical text-[8px] text-white/50 tracking-wide">
+                    {item.japanese}
+                  </div>
+                </div>
+
+                {/* Top colored gradient box */}
+                <div className={`h-2/5 bg-gradient-to-b ${item.topGradient}`}>
+                  <div className="w-full h-full" />
+                </div>
+
+                {/* Middle frame area */}
+                <div className="h-1/5 flex items-center justify-center relative bg-dark-800">
+                  {/* Outer border frame */}
+                  <div className="w-16 h-20 border-2 border-white/50 relative">
+                    {/* Inner border */}
+                    <div className="absolute inset-1 border border-white/35" />
+                  </div>
+                  
+                  {/* Corner connectors */}
+                  <div className="absolute left-24 top-1/3 h-12 w-3 border-l border-r border-white/40" />
+                </div>
+
+                {/* Bottom colored gradient box */}
+                <div className={`h-2/5 bg-gradient-to-t ${item.bottomGradient}`}>
+                  <div className="w-full h-full" />
                 </div>
               </div>
 
-              {/* Top gradient box */}
-              <div className={`h-[35%] ${item.topColor} border-b border-white/20 relative flex items-center justify-center`}>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-dark-900/50" />
+              {/* Bottom label bar */}
+              <div className="absolute bottom-0 left-0 right-0 py-2 px-2 bg-gradient-to-r from-dark-800/95 to-dark-700/95 border-t border-white/10">
+                <div className="flex items-center justify-center gap-1.5">
+                  <Icon className={`w-3 h-3 ${item.accentColor}`} />
+                  <span className="text-[11px] font-bold text-white">{item.label}</span>
+                </div>
               </div>
+            </NavLink>
+          )
+        })}
+      </div>
 
-              {/* Center frame area */}
-              <div className="h-[30%] flex items-center justify-center relative">
-                {/* Outer border lines */}
-                <div className="absolute left-4 top-4 bottom-4 w-px bg-white/30" />
-                <div className="absolute right-4 top-4 bottom-4 w-px bg-white/30" />
-                
-                {/* Inner border lines */}
-                <div className="absolute left-6 top-4 bottom-4 w-px bg-white/20" />
-                <div className="absolute right-6 top-4 bottom-4 w-px bg-white/20" />
-                
-                {/* Horizontal corner lines */}
-                <div className="absolute left-4 right-4 top-4 h-px bg-white/30" />
-                <div className="absolute left-4 right-4 bottom-4 h-px bg-white/30" />
-                
-                {/* Center vertical line */}
-                <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-white/25" />
-              </div>
-
-              {/* Bottom gradient box */}
-              <div className={`h-[35%] ${item.bottomColor} border-t border-white/20 relative flex items-center justify-center`}>
-                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-dark-900/50" />
-              </div>
-            </div>
-
-            {/* Bottom label bar */}
-            <div className={`absolute bottom-0 left-0 right-0 py-2.5 px-4 bg-gradient-to-r ${item.barGradient} border-t border-white/10`}>
-              <div className="flex items-center justify-center gap-2">
-                <Icon className={`w-4 h-4 ${item.accentColor}`} />
-                <span className="text-sm font-bold text-white">{item.label}</span>
-              </div>
-            </div>
-          </NavLink>
-        )
-      })}
+      {/* Right Arrow */}
+      <button 
+        onClick={() => scroll('right')}
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-dark-700/90 border border-white/20 flex items-center justify-center text-gray-400 hover:text-white hover:bg-dark-600 transition-colors"
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
     </div>
   )
 }
