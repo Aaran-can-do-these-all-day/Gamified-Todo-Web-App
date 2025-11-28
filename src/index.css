@@ -109,3 +109,8 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.writing-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}

@@ -1,6 +1,5 @@
 import { usePlayer } from '../context/PlayerContext'
 import { Radar, RadarChart as RechartsRadar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts'
-import { motion } from 'framer-motion'
 
 function RadarChart() {
   const { player } = usePlayer()
@@ -15,53 +14,51 @@ function RadarChart() {
   ]
 
   return (
-    <motion.div 
-      className="card-dark p-6"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="text-center mb-4">
-        <h2 className="font-display text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          STATISTICS
-        </h2>
-        <p className="text-xs text-gray-500 mt-1">THE SYSTEM USES ME, AND I USE THE SYSTEM</p>
+    <div className="bg-dark-800/80 rounded-lg border border-white/10 p-6 h-full flex flex-col">
+      <div className="text-center mb-2">
+        <p className="text-[10px] text-gray-500 tracking-widest uppercase">
+          "THE SYSTEM USES ME, AND I USE THE SYSTEM"
+        </p>
       </div>
       
-      <div className="h-64">
+      <div className="flex-1 min-h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <RechartsRadar cx="50%" cy="50%" outerRadius="70%" data={data}>
+          <RechartsRadar cx="50%" cy="50%" outerRadius="65%" data={data}>
             <PolarGrid 
-              stroke="rgba(168, 85, 247, 0.2)" 
-              strokeDasharray="3 3"
+              stroke="#4B5563"
+              strokeOpacity={0.6}
+              gridType="polygon"
             />
             <PolarAngleAxis 
               dataKey="subject" 
-              tick={{ fill: '#9ca3af', fontSize: 12 }}
+              tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 500 }}
+              tickLine={false}
             />
             <PolarRadiusAxis 
-              angle={30} 
-              domain={[0, 10]} 
-              tick={{ fill: '#6b7280', fontSize: 10 }}
-              tickCount={6}
+              angle={90} 
+              domain={[0, 9]} 
+              tick={{ fill: '#6B7280', fontSize: 9 }}
+              tickCount={10}
+              axisLine={false}
             />
             <Radar
               name="Stats"
               dataKey="value"
-              stroke="#a855f7"
-              fill="rgba(168, 85, 247, 0.3)"
+              stroke="#A855F7"
+              fill="#A855F7"
+              fillOpacity={0.35}
               strokeWidth={2}
-              animationDuration={1200}
-              animationEasing="ease-out"
             />
           </RechartsRadar>
         </ResponsiveContainer>
       </div>
       
-      <div className="text-center text-xs text-gray-500 mt-2">
-        <span className="text-yellow-400">⚡</span> Powered by ChartBase
+      <div className="text-center mt-2">
+        <span className="text-xs text-gray-500">
+          <span className="text-yellow-400">⚡</span> Powered by ChartBase
+        </span>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

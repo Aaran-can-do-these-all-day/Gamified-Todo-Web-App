@@ -36,7 +36,7 @@ const getRank = (level) => {
 
 const initialPlayerState = {
   id: '1',
-  name: 'Player',
+  name: 'Adam',
   title: 'Rising from the Ashes',
   xp: 2780,
   gold: 5350,
