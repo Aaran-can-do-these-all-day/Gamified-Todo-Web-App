@@ -10,7 +10,7 @@ function PlayerCard() {
   const filledSegments = Math.floor((xpInCurrentLevel / xpNeededForLevel) * segments)
 
   return (
-    <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col max-h-[600px]">
+    <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col max-h-[750px]">
       <div className="p-4 flex-1 overflow-y-auto">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-gray-400">⚔️</span>
