@@ -1,233 +1,268 @@
-import { useState } from 'react'
-import { usePlayer } from '../context/PlayerContext'
-import BossCard from '../components/BossCard'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useMemo, useState } from "react";
+import { usePlayer } from "../context/PlayerContext";
+import BossCard from "../components/BossCard";
+import { motion } from "framer-motion";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  Power,
+  Sword,
+  Flame,
+  Target,
+} from "lucide-react";
+import { NavLink } from "react-router-dom";
+import useBosses from "../hooks/useBosses";
+import { bosses as fallbackBossesSeed } from "../data/bosses";
 
-const initialBosses = [
-  {
-    id: 1,
-    name: 'The Goblin King',
-    rank: 'E-Rank',
-    xpRequired: 500,
-    rewardGold: 100,
-    rewardItem: 'Rusty Sword',
-    days: [
-      { completed: false },
-      { completed: false },
-    ],
-    losses: 0,
-    systemMessage: 'The Goblin King senses your hesitation... Use the system productively for at least 3 hours for 2 days in a row.',
-  },
-  {
-    id: 2,
-    name: 'Hollow Magician',
-    rank: 'C-Rank',
-    xpRequired: 3000,
-    rewardGold: 300,
-    rewardItem: 'Magic Staff',
-    days: [
-      { completed: false },
-      { completed: false },
-      { completed: false },
-    ],
-    losses: 0,
-    systemMessage: 'The Hollow Magician hides behind a mana barrier. Earn 300 XP to breach his domain.',
-  },
-  {
-    id: 3,
-    name: 'Lycan Alpha',
-    rank: 'D-Rank',
-    xpRequired: 1500,
-    rewardGold: 200,
-    rewardItem: 'Silver Claws',
-    days: [
-      { completed: true },
-      { completed: true },
-      { completed: false },
-      { completed: false },
-    ],
-    losses: 0,
-    systemMessage: 'The Lycan Alpha is watching you from the darkness... Focus for at least 4 hours per day for 4 days in a row.',
-  },
-  {
-    id: 4,
-    name: 'Shadow Monarch',
-    rank: 'S-Rank',
-    xpRequired: 10000,
-    rewardGold: 1000,
-    rewardItem: 'Shadow Extraction',
-    days: [
-      { completed: false },
-      { completed: false },
-      { completed: false },
-      { completed: false },
-      { completed: false },
-      { completed: false },
-      { completed: false },
-    ],
-    losses: 0,
-    systemMessage: 'The ultimate challenge awaits. Only those who have truly leveled up can face the Shadow Monarch.',
-  },
-]
+const rankColor = (rank, fallback) => {
+  switch (rank) {
+    case "E-Rank":
+      return fallback ? "#22c55e40" : "#22c55e";
+    case "D-Rank":
+      return fallback ? "#3b82f640" : "#3b82f6";
+    case "C-Rank":
+      return fallback ? "#facc1540" : "#facc15";
+    case "B-Rank":
+      return fallback ? "#a855f740" : "#a855f7";
+    case "A-Rank":
+      return fallback ? "#f9731640" : "#f97316";
+    default:
+      return fallback ? "#ef444440" : "#ef4444";
+  }
+};
 
 function Gates() {
-  const { player } = usePlayer()
-  const [bosses, setBosses] = useState(initialBosses)
-  const [selectedBoss, setSelectedBoss] = useState(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const { player } = usePlayer();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [fallbackBosses, setFallbackBosses] = useState(fallbackBossesSeed);
 
-  const handleDayComplete = (bossId, dayIndex) => {
-    setBosses(bosses.map(boss => {
-      if (boss.id === bossId) {
-        const newDays = [...boss.days]
-        newDays[dayIndex] = { ...newDays[dayIndex], completed: !newDays[dayIndex].completed }
-        return { ...boss, days: newDays }
-      }
-      return boss
-    }))
-  }
+  const {
+    bosses: remoteBosses,
+    loading: remoteLoading,
+    error: remoteError,
+    toggleDay: toggleRemoteDay,
+    supabaseReady,
+  } = useBosses();
+
+  const usingRemoteBosses = supabaseReady && remoteBosses.length > 0;
+
+  const bosses = useMemo(
+    () => (usingRemoteBosses ? remoteBosses : fallbackBosses),
+    [usingRemoteBosses, remoteBosses, fallbackBosses],
+  );
+
+  const currentBoss = bosses[currentIndex] ?? bosses[0];
+  const isUnlocked = player?.xp >= (currentBoss?.xpRequired ?? Infinity);
+
+  const handleDayComplete = async (bossId, dayIndex) => {
+    if (!currentBoss) return;
+
+    if (usingRemoteBosses) {
+      await toggleRemoteDay(bossId, dayIndex + 1);
+      return;
+    }
+
+    setFallbackBosses((prev) =>
+      prev.map((boss) => {
+        if (boss.id !== bossId) return boss;
+        const nextDays = boss.days.map((day, idx) =>
+          idx === dayIndex ? { ...day, completed: !day.completed } : day,
+        );
+        return { ...boss, days: nextDays };
+      }),
+    );
+  };
 
   const nextBoss = () => {
-    setCurrentIndex((prev) => (prev + 1) % bosses.length)
-  }
+    setCurrentIndex((prev) => (prev + 1) % bosses.length);
+  };
 
   const prevBoss = () => {
-    setCurrentIndex((prev) => (prev - 1 + bosses.length) % bosses.length)
-  }
+    setCurrentIndex((prev) => (prev - 1 + bosses.length) % bosses.length);
+  };
 
-  const currentBoss = bosses[currentIndex]
-  const isUnlocked = player.xp >= currentBoss.xpRequired
+  const gradientColor = rankColor(currentBoss?.rank, false);
+  const gradientBorder = rankColor(currentBoss?.rank, true);
 
   return (
-    <div className="min-h-screen">
-      <div className="h-24 relative overflow-hidden">
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(90deg, 
-              transparent 0%, 
-              rgba(${currentBoss.rank === 'E-Rank' ? '34, 197, 94' : 
-                      currentBoss.rank === 'D-Rank' ? '59, 130, 246' : 
-                      currentBoss.rank === 'C-Rank' ? '250, 204, 21' : 
-                      currentBoss.rank === 'B-Rank' ? '168, 85, 247' : 
-                      currentBoss.rank === 'A-Rank' ? '249, 115, 22' : 
-                      '239, 68, 68'}, 0.3) 50%, 
-              transparent 100%)`
-          }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-          <div className="h-1 w-full bg-gradient-to-r from-transparent via-current to-transparent animate-pulse opacity-60"
-               style={{ color: currentBoss.rank === 'E-Rank' ? '#22c55e' : 
-                               currentBoss.rank === 'D-Rank' ? '#3b82f6' : 
-                               currentBoss.rank === 'C-Rank' ? '#facc15' : 
-                               currentBoss.rank === 'B-Rank' ? '#a855f7' : 
-                               currentBoss.rank === 'A-Rank' ? '#f97316' : '#ef4444' }} />
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-[#0a0a0f]">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <motion.div 
+        <motion.div
           className="text-center mb-12"
-          key={currentBoss.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 
-            className="font-display text-4xl md:text-6xl font-bold mb-4 text-glow"
-            style={{ 
-              color: currentBoss.rank === 'E-Rank' ? '#22c55e' : 
-                     currentBoss.rank === 'D-Rank' ? '#3b82f6' : 
-                     currentBoss.rank === 'C-Rank' ? '#facc15' : 
-                     currentBoss.rank === 'B-Rank' ? '#a855f7' : 
-                     currentBoss.rank === 'A-Rank' ? '#f97316' : '#ef4444',
-              textShadow: `0 0 30px currentColor, 0 0 60px currentColor`
-            }}
-          >
-            {currentBoss.name.toUpperCase()}
+          <p className="text-xs font-semibold tracking-[0.6em] text-white/35 uppercase">
+            Dungeon Break
+          </p>
+          <h1 className="mt-3 font-display text-4xl md:text-5xl font-black tracking-[0.35em] bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-[0_14px_50px_rgba(239,68,68,0.35)]">
+            GATES
           </h1>
+          <p className="mt-4 text-sm uppercase tracking-[0.5em] text-white/60">
+            ゲート
+          </p>
+        </motion.div>
+
+        <div className="flex flex-wrap justify-center gap-3 mb-12">
+          <NavLink
+            to="/"
+            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+          >
+            <Home className="w-4 h-4" /> Return Home
+          </NavLink>
+          <NavLink
+            to="/awakening"
+            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+          >
+            <Power className="w-4 h-4" /> Awakening
+          </NavLink>
+          <NavLink
+            to="/quests"
+            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+          >
+            <Sword className="w-4 h-4" /> Quests
+          </NavLink>
+          <NavLink
+            to="/habits"
+            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+          >
+            <Flame className="w-4 h-4" /> Habits
+          </NavLink>
+        </div>
+
+        <div className="flex flex-col gap-3 mb-6 text-xs text-gray-400">
+          {supabaseReady ? (
+            <div className="flex items-center justify-between">
+              <span>
+                {remoteLoading
+                  ? "Syncing live gates from Supabase..."
+                  : usingRemoteBosses
+                    ? "Connected to Supabase — showing live gate progress."
+                    : "No remote gates yet — displaying local demo data."}
+              </span>
+              <span className="px-2 py-0.5 rounded-full border border-purple-500/40 text-purple-300">
+                Live Sync
+              </span>
+            </div>
+          ) : (
+            <div className="text-yellow-300 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2">
+              Supabase credentials missing — displaying local gate demo data
+              only.
+            </div>
+          )}
+          {remoteError && (
+            <div className="text-red-400 bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2">
+              {remoteError.message}
+            </div>
+          )}
+        </div>
+
+        <motion.div
+          className="text-center mb-12"
+          key={currentBoss?.id ?? "current-boss"}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="inline-block relative">
+            <h1
+              className="font-display text-4xl md:text-6xl font-bold mb-4 text-glow relative z-10"
+              style={{
+                color: gradientColor,
+                textShadow: "0 0 30px currentColor, 0 0 60px currentColor",
+              }}
+            >
+              {currentBoss?.name?.toUpperCase() ?? "UNKNOWN GATE"}
+            </h1>
+            <div
+              className="absolute -inset-4 blur-2xl opacity-20 rounded-full"
+              style={{ background: gradientColor }}
+            />
+          </div>
         </motion.div>
 
         <div className="flex items-center justify-center gap-8">
-          <button 
+          <button
             onClick={prevBoss}
-            className="p-3 rounded-full bg-dark-700 hover:bg-dark-600 transition-colors"
+            className="p-4 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all group"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-6 h-6 text-white/40 group-hover:text-white transition-colors" />
           </button>
 
           <div className="flex-1 max-w-4xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
               <div className="hidden md:block">
-                <div 
-                  className="aspect-[3/4] rounded-xl border-2 flex items-center justify-center"
-                  style={{ 
-                    borderColor: currentBoss.rank === 'E-Rank' ? '#22c55e40' : 
-                                 currentBoss.rank === 'D-Rank' ? '#3b82f640' : 
-                                 currentBoss.rank === 'C-Rank' ? '#facc1540' : 
-                                 currentBoss.rank === 'B-Rank' ? '#a855f740' : 
-                                 currentBoss.rank === 'A-Rank' ? '#f9731640' : '#ef444440',
-                    background: `linear-gradient(180deg, 
-                      ${currentBoss.rank === 'E-Rank' ? 'rgba(34, 197, 94, 0.1)' : 
-                        currentBoss.rank === 'D-Rank' ? 'rgba(59, 130, 246, 0.1)' : 
-                        currentBoss.rank === 'C-Rank' ? 'rgba(250, 204, 21, 0.1)' : 
-                        currentBoss.rank === 'B-Rank' ? 'rgba(168, 85, 247, 0.1)' : 
-                        currentBoss.rank === 'A-Rank' ? 'rgba(249, 115, 22, 0.1)' : 'rgba(239, 68, 68, 0.1)'} 0%, 
-                      rgba(0,0,0,0.8) 100%)`
+                <div
+                  className="aspect-[3/4] rounded-xl border border-white/10 flex items-center justify-center relative overflow-hidden group"
+                  style={{
+                    background: `linear-gradient(180deg, ${gradientBorder.replace(
+                      "40",
+                      "0d",
+                    )} 0%, rgba(0,0,0,0.9) 100%)`,
                   }}
                 >
-                  <div className="text-center p-4">
-                    <div className="font-display text-sm font-bold text-gray-400 mb-2">
-                      {currentBoss.rank} GATE
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      background: `radial-gradient(circle at center, ${gradientColor}, transparent 70%)`,
+                    }}
+                  />
+                  <div className="text-center p-4 relative z-10">
+                    <div
+                      className="font-display text-2xl font-bold mb-2 opacity-30"
+                      style={{ color: gradientColor }}
+                    >
+                      {currentBoss?.rank}
                     </div>
-                    <div className="flex flex-col items-center gap-1 text-xs text-gray-500">
-                      {currentBoss.name.split(' ').map((word, i) => (
-                        <span key={i}>{word[0]}</span>
-                      ))}
+                    <div className="w-px h-12 bg-white/10 mx-auto mb-2" />
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-white/40">
+                      Gate Status: Active
                     </div>
                   </div>
                 </div>
               </div>
 
-              <motion.div 
+              <motion.div
                 className="md:col-span-1"
-                key={currentBoss.id}
+                key={`${currentBoss?.id ?? "boss"}-${player?.xp ?? 0}`}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
-                <BossCard 
-                  boss={currentBoss} 
-                  playerXp={player.xp}
-                  onDayComplete={handleDayComplete}
+                <BossCard
+                  boss={currentBoss}
+                  playerXp={player?.xp ?? 0}
+                  onDayComplete={(bossId, dayIndex) =>
+                    handleDayComplete(bossId, dayIndex)
+                  }
                 />
               </motion.div>
 
               <div className="hidden md:block">
-                <div 
-                  className="aspect-[3/4] rounded-xl border-2 flex items-center justify-center"
-                  style={{ 
-                    borderColor: currentBoss.rank === 'E-Rank' ? '#22c55e40' : 
-                                 currentBoss.rank === 'D-Rank' ? '#3b82f640' : 
-                                 currentBoss.rank === 'C-Rank' ? '#facc1540' : 
-                                 currentBoss.rank === 'B-Rank' ? '#a855f740' : 
-                                 currentBoss.rank === 'A-Rank' ? '#f9731640' : '#ef444440',
-                    background: `linear-gradient(180deg, 
-                      ${currentBoss.rank === 'E-Rank' ? 'rgba(34, 197, 94, 0.1)' : 
-                        currentBoss.rank === 'D-Rank' ? 'rgba(59, 130, 246, 0.1)' : 
-                        currentBoss.rank === 'C-Rank' ? 'rgba(250, 204, 21, 0.1)' : 
-                        currentBoss.rank === 'B-Rank' ? 'rgba(168, 85, 247, 0.1)' : 
-                        currentBoss.rank === 'A-Rank' ? 'rgba(249, 115, 22, 0.1)' : 'rgba(239, 68, 68, 0.1)'} 0%, 
-                      rgba(0,0,0,0.8) 100%)`
+                <div
+                  className="aspect-[3/4] rounded-xl border border-white/10 flex items-center justify-center relative overflow-hidden group"
+                  style={{
+                    background: `linear-gradient(180deg, ${gradientBorder.replace(
+                      "40",
+                      "0d",
+                    )} 0%, rgba(0,0,0,0.9) 100%)`,
                   }}
                 >
-                  <div className="text-center p-4">
-                    <div className="font-display text-sm font-bold text-gray-400 mb-2">
-                      {currentBoss.rank} GATE
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      background: `radial-gradient(circle at center, ${gradientColor}, transparent 70%)`,
+                    }}
+                  />
+                  <div className="text-center p-4 relative z-10">
+                    <div
+                      className="font-display text-2xl font-bold mb-2 opacity-30"
+                      style={{ color: gradientColor }}
+                    >
+                      {currentBoss?.rank}
                     </div>
-                    <div className="flex flex-col items-center gap-1 text-xs text-gray-500">
-                      {currentBoss.name.split(' ').map((word, i) => (
-                        <span key={i}>{word[0]}</span>
-                      ))}
+                    <div className="w-px h-12 bg-white/10 mx-auto mb-2" />
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-white/40">
+                      Gate Status: Active
                     </div>
                   </div>
                 </div>
@@ -235,11 +270,11 @@ function Gates() {
             </div>
           </div>
 
-          <button 
+          <button
             onClick={nextBoss}
-            className="p-3 rounded-full bg-dark-700 hover:bg-dark-600 transition-colors"
+            className="p-4 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all group"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-6 h-6 text-white/40 group-hover:text-white transition-colors" />
           </button>
         </div>
 
@@ -248,17 +283,26 @@ function Gates() {
             <button
               key={boss.id}
               onClick={() => setCurrentIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentIndex 
-                  ? 'bg-purple-500 scale-125' 
-                  : 'bg-dark-600 hover:bg-dark-500'
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === currentIndex
+                  ? "w-8 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                  : "w-1.5 bg-white/20 hover:bg-white/40"
               }`}
             />
           ))}
         </div>
+
+        <div className="text-center mt-10 text-sm text-gray-400">
+          {isUnlocked
+            ? "Gate unlocked. The System awaits your command."
+            : `Earn ${Math.max(
+                0,
+                (currentBoss?.xpRequired ?? 0) - (player?.xp ?? 0),
+              ).toLocaleString()} XP to unlock this gate.`}
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Gates
+export default Gates;

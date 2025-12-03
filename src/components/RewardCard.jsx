@@ -3,16 +3,32 @@ import { Coins, Star, Check, Lock } from 'lucide-react'
 import { usePlayer } from '../context/PlayerContext'
 import { motion } from 'framer-motion'
 
-function RewardCard({ reward, onClaim }) {
-  const { player, spendGold } = usePlayer()
+function RewardCard({ reward, onClaim, tasks = [] }) {
+  const { player, spendGold, spendXP } = usePlayer()
   const [isClaimed, setIsClaimed] = useState(reward.claimed || false)
   
-  const canAfford = player.gold >= reward.cost
-  const isAvailable = !isClaimed && canAfford
+  // Check task requirement
+  const requiredTask = reward.requiredTaskId ? tasks.find(t => t.id === reward.requiredTaskId) : null
+  const isTaskLocked = requiredTask && !requiredTask.completed
+
+  // Check expiry
+  const isExpired = reward.expiryDate ? (() => {
+    const expiry = new Date(reward.expiryDate);
+    expiry.setHours(23, 59, 59, 999); // Set to end of day
+    return expiry < new Date();
+  })() : false;
+
+  const canAfford = player.gold >= reward.cost && (!reward.xpCost || player.xp >= reward.xpCost)
+  const isAvailable = !isClaimed && canAfford && !isTaskLocked && !isExpired
 
   const handleClaim = () => {
     if (!isAvailable) return
     
+    // Deduct XP if applicable
+    if (reward.xpCost > 0) {
+      if (!spendXP(reward.xpCost)) return // Should be caught by isAvailable, but safety check
+    }
+
     if (spendGold(reward.cost)) {
       setIsClaimed(true)
       onClaim?.(reward.id)
@@ -63,12 +79,32 @@ function RewardCard({ reward, onClaim }) {
               ? 'bg-gray-500/20 text-gray-400'
               : 'bg-red-500/20 text-red-400'
         }`}>
-          {isClaimed ? 'Claimed' : isAvailable ? 'Available' : 'Insufficient Gold'}
+          {isClaimed ? 'Claimed' : isExpired ? 'Expired' : isTaskLocked ? 'Locked' : isAvailable ? 'Available' : 'Insufficient Funds'}
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
-          <Coins className="w-4 h-4 text-yellow-400" />
-          <span className="text-yellow-400 font-medium">{reward.cost} Credits required</span>
+        {reward.category && (
+          <div className="mt-2 inline-block px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400 mr-2">
+            {reward.category}
+          </div>
+        )}
+
+        {reward.expiryDate && (
+          <div className="mt-2 inline-block px-2 py-0.5 rounded text-xs font-medium bg-orange-500/20 text-orange-400">
+            Expires: {new Date(reward.expiryDate).toLocaleDateString()}
+          </div>
+        )}
+
+        <div className="mt-3 flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Coins className="w-4 h-4 text-yellow-400" />
+            <span className="text-yellow-400 font-medium">{reward.cost} Gold</span>
+          </div>
+          {reward.xpCost > 0 && (
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-blue-400" />
+              <span className="text-blue-400 font-medium">{reward.xpCost} XP</span>
+            </div>
+          )}
         </div>
 
         <button
@@ -85,10 +121,20 @@ function RewardCard({ reward, onClaim }) {
               <Check className="w-4 h-4" />
               Claimed
             </>
+          ) : isExpired ? (
+            <>
+              <Lock className="w-4 h-4" />
+              Expired
+            </>
+          ) : isTaskLocked ? (
+            <>
+              <Lock className="w-4 h-4" />
+              Complete "{requiredTask?.title}"
+            </>
           ) : !canAfford ? (
             <>
               <Lock className="w-4 h-4" />
-              Not Enough Gold
+              Not Enough Funds
             </>
           ) : (
             <>
