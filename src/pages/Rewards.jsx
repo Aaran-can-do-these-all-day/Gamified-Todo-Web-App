@@ -1,4 +1,5 @@
 import { useState } from "react";
+import TopNav from "../components/TopNav";
 import { usePlayer } from "../context/PlayerContext";
 import useTasks from "../hooks/useTasks";
 import RewardCard from "../components/RewardCard";
@@ -142,6 +143,7 @@ function Rewards() {
 
   return (
     <div className="min-h-screen">
+      <TopNav />
       <div className="h-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-purple-900/30" />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -280,3 +282,4 @@ function Rewards() {
 }
 
 export default Rewards;
+

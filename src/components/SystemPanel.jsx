@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { usePlayer } from "../context/PlayerContext";
+import DailyBriefingModal from "./DailyBriefingModal";
 import {
   Power,
   Flame,
@@ -23,13 +24,56 @@ const DAILY_DIRECTIVES = [
 ];
 
 function SystemPanel() {
-  const { player, streakMultiplier } = usePlayer();
+  const { player, streakMultiplier, activateSystem, deactivateSystem } = usePlayer();
+  const [showBriefingModal, setShowBriefingModal] = useState(false);
 
   const dailyDirective = useMemo(() => {
     return DAILY_DIRECTIVES[
       Math.floor(Math.random() * DAILY_DIRECTIVES.length)
     ];
   }, []);
+
+  const handlePowerButtonClick = () => {
+    setShowBriefingModal(true);
+  };
+
+  const handleSystemInitialize = () => {
+    activateSystem();
+    setShowBriefingModal(false);
+  };
+
+  // If system is not activated, show minimal UI with Power Button
+  if (!player.systemActivated) {
+    return (
+      <>
+        <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col items-center justify-center p-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 mb-4 border border-cyan-500/30">
+              <Power className="w-10 h-10 text-cyan-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">System Standby</h3>
+            <p className="text-sm text-gray-400 max-w-xs mx-auto">
+              The System awaits activation. Complete your Daily Briefing to unlock your Hunter powers.
+            </p>
+          </div>
+          
+          <button
+            onClick={handlePowerButtonClick}
+            className="group relative px-6 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-cyan-500/50 flex items-center gap-2"
+          >
+            <Power className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+            Activate System
+          </button>
+        </div>
+
+        <DailyBriefingModal
+          isOpen={showBriefingModal}
+          onClose={() => setShowBriefingModal(false)}
+          onInitialize={handleSystemInitialize}
+        />
+      </>
+    );
+  }
 
   const remainingQuests = [
     { icon: "📚", name: "Study Programming" },
@@ -38,11 +82,22 @@ function SystemPanel() {
     { icon: "📖", name: "Read Atomic Habits" },
   ];
 
+  // Full System UI when activated
   return (
     <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col max-h-[750px]">
       <div className="p-4 flex-1 overflow-y-auto">
-        <div className="flex items-center justify-end mb-4">
-          <Power className="w-5 h-5 text-gray-400" />
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={deactivateSystem}
+            className="group flex items-center gap-2 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 font-medium text-xs rounded-lg transition-all duration-300 border border-red-500/30 hover:border-red-500/50"
+          >
+            <Power className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-300" />
+            Power Off
+          </button>
+          <div className="flex items-center gap-2 text-xs text-green-400">
+            <Power className="w-4 h-4" />
+            <span>System Active</span>
+          </div>
         </div>
 
         <div className="bg-dark-700/60 rounded-lg p-4 mb-3">

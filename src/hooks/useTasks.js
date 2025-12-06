@@ -8,10 +8,12 @@ import { isSupabaseReady } from "../api/supabase";
 import { usePlayer } from "../context/PlayerContext";
 
 const DEFAULT_DIFFICULTY = "Normal";
+const DEFAULT_CATEGORY = "General";
 
 function normalizeTaskPayload({
   title,
   difficulty,
+  category,
   startTime,
   endTime,
   icon,
@@ -26,6 +28,7 @@ function normalizeTaskPayload({
   return {
     title: title.trim(),
     difficulty: difficulty || DEFAULT_DIFFICULTY,
+    category: category || DEFAULT_CATEGORY,
     startTime,
     endTime,
     icon: icon || null,
@@ -149,6 +152,7 @@ export function useTasks({
         playerId,
         normalized.title,
         normalized.difficulty,
+        normalized.category,
         normalized.startTime,
         normalized.endTime,
         normalized.icon,

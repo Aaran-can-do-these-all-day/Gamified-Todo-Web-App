@@ -10,6 +10,17 @@ const difficultyColors = {
   'S-Rank': 'bg-red-500/20 text-red-400 border-red-500/30',
 }
 
+const categoryColors = {
+  Discipline: 'bg-purple-500/10 text-purple-300 border-purple-500/20',
+  Health: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+  Focus: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20',
+  Learning: 'bg-blue-500/10 text-blue-300 border-blue-500/20',
+  General: 'bg-slate-500/10 text-slate-200 border-slate-500/20',
+  Mindfulness: 'bg-pink-500/10 text-pink-300 border-pink-500/20',
+  Leadership: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+  'High-Intensity': 'bg-red-500/10 text-red-300 border-red-500/20',
+}
+
 function TaskCard({ task, onComplete, onFail }) {
   const { completeTask } = usePlayer()
   const [showXpGain, setShowXpGain] = useState(false)
@@ -56,8 +67,15 @@ function TaskCard({ task, onComplete, onFail }) {
           <h3 className="font-semibold text-white">{task.title}</h3>
         </div>
 
-        <div className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${difficultyColors[task.difficulty]}`}>
-          {task.difficulty}
+        <div className="flex flex-wrap gap-2 mt-2">
+          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${difficultyColors[task.difficulty] || 'border-white/10 text-white/70'}`}>
+            {task.difficulty}
+          </span>
+          {task.category && (
+            <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${categoryColors[task.category] || 'border-white/10 text-white/70'}`}>
+              {task.category}
+            </span>
+          )}
         </div>
 
         <div className="mt-3 space-y-1 text-sm">

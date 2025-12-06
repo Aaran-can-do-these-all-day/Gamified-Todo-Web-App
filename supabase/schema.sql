@@ -71,6 +71,21 @@ CREATE TABLE IF NOT EXISTS bosses (
 CREATE INDEX IF NOT EXISTS idx_bosses_player ON bosses(player_id);
 CREATE INDEX IF NOT EXISTS idx_bosses_xp_required ON bosses(player_id, xp_required);
 
+-- Vision / Anti-Vision journaling
+CREATE TABLE IF NOT EXISTS visions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('vision', 'anti-vision')),
+  question_id INTEGER NOT NULL CHECK (question_id > 0),
+  answer TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_visions_player_type_question
+  ON visions(player_id, type, question_id);
+CREATE INDEX IF NOT EXISTS idx_visions_player_type ON visions(player_id, type);
+
 -- Seed data ---------------------------------------------------------------
 
 INSERT INTO players (

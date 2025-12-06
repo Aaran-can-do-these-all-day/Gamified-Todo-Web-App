@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { NavLink } from "react-router-dom";
 import {
   Home,
@@ -9,6 +9,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import useVisions from "../hooks/useVisions";
+import { VISION_TYPES } from "../api/visions";
 
 const antiVisionQuestions = [
   {
@@ -61,6 +63,7 @@ function QuestionCard({
   onAnswerChange,
   isExpanded,
   onToggle,
+  disabled = false,
 }) {
   return (
     <div className="rounded-xl border border-white/10 bg-[#191919] overflow-hidden transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
@@ -94,8 +97,9 @@ function QuestionCard({
               <textarea
                 value={answer}
                 onChange={(e) => onAnswerChange(e.target.value)}
+                disabled={disabled}
                 placeholder="Write your answer here..."
-                className="w-full h-32 bg-black/30 border border-white/10 rounded-lg p-3 text-white placeholder-gray-500 resize-none focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
+                className={`w-full h-32 bg-black/30 border border-white/10 rounded-lg p-3 text-white placeholder-gray-500 resize-none focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
               />
             </div>
           </motion.div>
@@ -106,13 +110,34 @@ function QuestionCard({
 }
 
 function Awakening() {
-  const [antiVisionAnswers, setAntiVisionAnswers] = useState({});
-  const [visionAnswers, setVisionAnswers] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
+  const [showAntiProcrastination, setShowAntiProcrastination] = useState(false);
+  const {
+    antiVisionAnswers,
+    visionAnswers,
+    loading: visionsLoading,
+    saving: visionsSaving,
+    error: visionsError,
+    source: visionSource,
+    supabaseReady: visionsConnected,
+    updateAnswer: updateVisionAnswer,
+  } = useVisions();
 
   const toggleQuestion = (key) => {
     setExpandedQuestions((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  const handleAntiVisionAnswer = useCallback(
+    (questionId, value) =>
+      updateVisionAnswer(VISION_TYPES.ANTI_VISION, questionId, value),
+    [updateVisionAnswer],
+  );
+
+  const handleVisionAnswer = useCallback(
+    (questionId, value) =>
+      updateVisionAnswer(VISION_TYPES.VISION, questionId, value),
+    [updateVisionAnswer],
+  );
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -129,7 +154,7 @@ function Awakening() {
             AWAKENING
           </h1>
           <p className="mt-4 text-sm uppercase tracking-[0.5em] text-white/60">
-            覚醒
+            限界を超えて
           </p>
         </motion.div>
 
@@ -158,6 +183,25 @@ function Awakening() {
           >
             <Target className="w-4 h-4" /> Gates
           </NavLink>
+        </div>
+
+        <div className="mb-8 space-y-2">
+          <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-gray-400">
+            <span>
+              Storage: {visionSource === "supabase" ? "Supabase Sync" : "Local Draft"}
+            </span>
+            <span className={visionsSaving ? "text-amber-300" : "text-emerald-300"}>
+              {visionsSaving ? "Saving..." : visionsLoading ? "Loading" : "Saved"}
+            </span>
+          </div>
+          {!visionsConnected && (
+            <p className="text-sm text-amber-300">
+              Supabase disabled — answers are stored locally on this device.
+            </p>
+          )}
+          {visionsError && (
+            <p className="text-sm text-red-400">{visionsError.message}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -194,11 +238,10 @@ function Awakening() {
                   question={q.question}
                   hint={q.hint}
                   answer={antiVisionAnswers[q.id] || ""}
-                  onAnswerChange={(val) =>
-                    setAntiVisionAnswers((prev) => ({ ...prev, [q.id]: val }))
-                  }
+                  onAnswerChange={(val) => handleAntiVisionAnswer(q.id, val)}
                   isExpanded={expandedQuestions[`anti-${q.id}`]}
                   onToggle={() => toggleQuestion(`anti-${q.id}`)}
+                  disabled={visionsLoading}
                 />
               ))}
             </div>
@@ -225,11 +268,10 @@ function Awakening() {
                   key={`vision-${q.id}`}
                   question={q.question}
                   answer={visionAnswers[q.id] || ""}
-                  onAnswerChange={(val) =>
-                    setVisionAnswers((prev) => ({ ...prev, [q.id]: val }))
-                  }
+                  onAnswerChange={(val) => handleVisionAnswer(q.id, val)}
                   isExpanded={expandedQuestions[`vision-${q.id}`]}
                   onToggle={() => toggleQuestion(`vision-${q.id}`)}
+                  disabled={visionsLoading}
                 />
               ))}
             </div>
@@ -264,16 +306,61 @@ function Awakening() {
               </ul>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-[#191919] p-6 hover:border-white/20 transition-colors cursor-pointer">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-gray-400">▶</span>
-                <h3 className="font-display font-bold tracking-wide text-gray-200">
-                  ANTI-PROCRASTINATION
-                </h3>
+            <div 
+              className="rounded-xl border border-white/10 bg-[#191919] overflow-hidden hover:border-white/20 transition-all cursor-pointer"
+              onClick={() => setShowAntiProcrastination(!showAntiProcrastination)}
+            >
+              <div className="p-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-400">{showAntiProcrastination ? '▼' : '▶'}</span>
+                  <h3 className="font-display font-bold tracking-wide text-gray-200">
+                    ANTI-PROCRASTINATION
+                  </h3>
+                </div>
               </div>
-              <p className="text-sm text-gray-400 pl-6">
-                Click to expand techniques for beating procrastination...
-              </p>
+              
+              <AnimatePresence>
+                {showAntiProcrastination && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="px-6 pb-6 pt-0 border-t border-white/5">
+                        <div className="mt-4">
+                            <h4 className="text-lg font-bold text-purple-400 mb-2">THE MOMENTUM RULE</h4>
+                            <p className="text-gray-300 text-sm mb-4">
+                                Procrastination dies the moment momentum begins.
+                                <br />
+                                Every morning, ask yourself:
+                            </p>
+                            <ul className="space-y-3 text-sm text-gray-300 mb-4">
+                                <li className="flex items-start gap-3">
+                                    <span className="text-purple-400 mt-0.5">▸</span>
+                                    <span>What is the smallest possible action I can take that gets the ball rolling?</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-purple-400 mt-0.5">▸</span>
+                                    <span>What can I start that takes less than 2 minutes?</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-purple-400 mt-0.5">▸</span>
+                                    <span>What can I do right now instead of waiting to feel ready?</span>
+                                </li>
+                            </ul>
+                            <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg text-center">
+                                <p className="text-sm font-medium text-purple-300">
+                                    Small action → momentum → motivation.
+                                    <br />
+                                    Always in that order.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

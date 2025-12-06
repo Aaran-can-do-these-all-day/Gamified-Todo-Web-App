@@ -32,6 +32,7 @@ const fallbackSeedTasks = [
     title: "Study Programming",
     icon: "</>",
     difficulty: "Normal",
+    category: "Discipline",
     startTime: "8:45 AM",
     endTime: "10:45 AM",
     credits: 50,
@@ -44,6 +45,7 @@ const fallbackSeedTasks = [
     title: "Workout",
     icon: "💪",
     difficulty: "Easy",
+    category: "Health",
     startTime: "11:15 AM",
     endTime: "12:45 PM",
     credits: 38,
@@ -56,6 +58,7 @@ const fallbackSeedTasks = [
     title: "Learn JavaScript",
     icon: "💻",
     difficulty: "Normal",
+    category: "Learning",
     startTime: "1:00 PM",
     endTime: "3:00 PM",
     credits: 100,
@@ -68,6 +71,7 @@ const fallbackSeedTasks = [
     title: "Read Atomic Habits",
     icon: "📖",
     difficulty: "Easy",
+    category: "Mindfulness",
     startTime: "3:00 PM",
     endTime: "4:00 PM",
     credits: 25,
@@ -78,6 +82,17 @@ const fallbackSeedTasks = [
 ];
 
 const FALLBACK_STORAGE_KEY = "solo-leveling-fallback-quests";
+
+const TASK_CATEGORY_OPTIONS = [
+  { value: "Discipline", label: "Discipline" },
+  { value: "Health", label: "Health" },
+  { value: "Focus", label: "Focus / Execution" },
+  { value: "Learning", label: "Learning / Skill" },
+  { value: "General", label: "General" },
+  { value: "Mindfulness", label: "Social / Mindfulness" },
+  { value: "Leadership", label: "Leadership" },
+  { value: "High-Intensity", label: "High Intensity" },
+];
 
 const parseDateValue = (value) => {
   if (!value) return null;
@@ -144,6 +159,7 @@ const mapRemoteTaskToCard = (task) => {
     title: task.title,
     icon: task.icon ?? "📋",
     difficulty: task.difficulty ?? "Normal",
+    category: task.category ?? "General",
     startTime: startLabel ?? "—",
     endTime: endLabel ?? "—",
     credits: task.goldReward ?? task.credits ?? 0,
@@ -158,6 +174,7 @@ const mapFallbackTaskToCard = (task) => ({ ...task });
 const defaultFormState = {
   title: "",
   difficulty: "Normal",
+  category: TASK_CATEGORY_OPTIONS[0].value,
   start: "",
   end: "",
   icon: "",
@@ -308,6 +325,7 @@ function Quests() {
         await createRemoteTask({
           title: trimmedTitle,
           difficulty: formState.difficulty,
+          category: formState.category,
           startTime: startDate.toISOString(),
           endTime: endDate.toISOString(),
           icon: formState.icon?.trim() || null,
@@ -326,6 +344,7 @@ function Quests() {
           title: trimmedTitle,
           icon: formState.icon?.trim() || "📋",
           difficulty: formState.difficulty,
+          category: formState.category,
           startTime: formatTimeLabel(startDate),
           endTime: formatTimeLabel(endDate),
           credits: gold,
@@ -515,6 +534,7 @@ function Quests() {
           scheduleValid={isScheduleValid}
           modeLabel={supabaseReady ? "Supabase Sync" : "Local Demo"}
           streakMultiplier={streakMultiplier}
+          categoryOptions={TASK_CATEGORY_OPTIONS}
         />
       )}
     </div>
@@ -533,9 +553,14 @@ function QuestModal({
   scheduleValid,
   modeLabel,
   streakMultiplier,
+  categoryOptions,
 }) {
   const hasScheduleInput = formState.start && formState.end;
   const showScheduleWarning = hasScheduleInput && !scheduleValid;
+  const categoriesToShow =
+    categoryOptions && categoryOptions.length > 0
+      ? categoryOptions
+      : [{ value: "General", label: "General" }];
 
   const handleOverlayMouseDown = (event) => {
     if (event.target === event.currentTarget && !submitting) {
@@ -731,6 +756,32 @@ function QuestModal({
                 ) : (
                   "—"
                 )}
+              </div>
+            </div>
+
+            {/* Difficulty */}
+            <div className="flex items-center h-9 group hover:bg-white/5 -mx-2 px-2 rounded transition-colors">
+              <div className="w-[160px] flex items-center gap-2 text-sm text-white/40">
+                <Target size={14} />
+                <span>Category</span>
+              </div>
+              <div className="flex-1">
+                <select
+                  value={formState.category}
+                  onChange={(e) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
+                  }
+                  className="bg-[#20252f] text-[#82c4ff] px-3 py-1.5 rounded text-sm border-none focus:ring-0 cursor-pointer hover:bg-[#2c3442] transition-colors min-w-[160px]"
+                >
+                  {categoriesToShow.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

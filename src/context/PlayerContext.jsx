@@ -53,6 +53,23 @@ const initialPlayerState = {
     foc: 6,
     fin: 3,
   },
+  // Solo Leveling System State
+  systemActivated: false,
+  lastSystemActivationDate: null,
+  equippedVisionId: null,
+  equippedAntiVisionId: null,
+  categoryStreaks: {
+    discipline: 0,
+    health: 0,
+    focus: 0,
+    learning: 0,
+    hard: 0,
+    general: 0,
+    social: 0,
+    leadership: 0,
+  },
+  unlockedShadows: [],
+  equippedShadows: [],
 };
 
 export function PlayerProvider({ children }) {
@@ -166,6 +183,97 @@ export function PlayerProvider({ children }) {
     }));
   };
 
+  // Solo Leveling System Functions
+  const activateSystem = () => {
+    const today = new Date().toISOString().split("T")[0];
+    setPlayer((prev) => ({
+      ...prev,
+      systemActivated: true,
+      lastSystemActivationDate: today,
+    }));
+  };
+
+  const deactivateSystem = () => {
+    setPlayer((prev) => ({
+      ...prev,
+      systemActivated: false,
+    }));
+  };
+
+  const equipVision = (visionId) => {
+    setPlayer((prev) => ({
+      ...prev,
+      equippedVisionId: visionId,
+    }));
+  };
+
+  const unequipVision = () => {
+    setPlayer((prev) => ({
+      ...prev,
+      equippedVisionId: null,
+    }));
+  };
+
+  const equipAntiVision = (antiVisionId) => {
+    setPlayer((prev) => ({
+      ...prev,
+      equippedAntiVisionId: antiVisionId,
+    }));
+  };
+
+  const unequipAntiVision = () => {
+    setPlayer((prev) => ({
+      ...prev,
+      equippedAntiVisionId: null,
+    }));
+  };
+
+  const updateCategoryStreak = (category, days) => {
+    setPlayer((prev) => ({
+      ...prev,
+      categoryStreaks: {
+        ...prev.categoryStreaks,
+        [category]: days,
+      },
+    }));
+  };
+
+  const unlockShadow = (shadowId) => {
+    setPlayer((prev) => {
+      if (prev.unlockedShadows.includes(shadowId)) return prev;
+      return {
+        ...prev,
+        unlockedShadows: [...prev.unlockedShadows, shadowId],
+      };
+    });
+  };
+
+  const equipShadow = (shadowId) => {
+    setPlayer((prev) => {
+      // Max 2 shadows equipped
+      if (prev.equippedShadows.length >= 2) {
+        console.warn("Cannot equip more than 2 shadows");
+        return prev;
+      }
+      if (prev.equippedShadows.includes(shadowId)) return prev;
+      if (!prev.unlockedShadows.includes(shadowId)) {
+        console.warn("Shadow must be unlocked first");
+        return prev;
+      }
+      return {
+        ...prev,
+        equippedShadows: [...prev.equippedShadows, shadowId],
+      };
+    });
+  };
+
+  const unequipShadow = (shadowId) => {
+    setPlayer((prev) => ({
+      ...prev,
+      equippedShadows: prev.equippedShadows.filter((id) => id !== shadowId),
+    }));
+  };
+
   const value = {
     player: { ...player, nextBossXp },
     setPlayer,
@@ -184,6 +292,17 @@ export function PlayerProvider({ children }) {
     updateAttribute,
     completeTask,
     applyPenalty,
+    // Solo Leveling System
+    activateSystem,
+    deactivateSystem,
+    equipVision,
+    unequipVision,
+    equipAntiVision,
+    unequipAntiVision,
+    updateCategoryStreak,
+    unlockShadow,
+    equipShadow,
+    unequipShadow,
     RANKS,
   };
 

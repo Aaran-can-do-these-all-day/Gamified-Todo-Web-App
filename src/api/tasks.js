@@ -14,6 +14,7 @@ const TASK_FIELDS = [
   "player_id",
   "title",
   "difficulty",
+  "category",
   "icon",
   "start_time",
   "end_time",
@@ -22,6 +23,8 @@ const TASK_FIELDS = [
   "completed",
   "created_at",
 ];
+
+const DEFAULT_CATEGORY = "General";
 
 function toIsoString(value) {
   const date = value instanceof Date ? value : new Date(value);
@@ -40,6 +43,7 @@ function mapTaskRow(row) {
     playerId: row.player_id,
     title: row.title,
     difficulty: row.difficulty,
+    category: row.category || DEFAULT_CATEGORY,
     icon: row.icon,
     startTime: row.start_time,
     endTime: row.end_time,
@@ -97,6 +101,7 @@ export async function createTask(
   playerId,
   title,
   difficulty,
+  category,
   startTime,
   endTime,
   icon = null,
@@ -118,6 +123,7 @@ export async function createTask(
     player_id: playerId,
     title,
     difficulty,
+    category: category || DEFAULT_CATEGORY,
     icon,
     start_time: toIsoString(startTime),
     end_time: toIsoString(endTime),
