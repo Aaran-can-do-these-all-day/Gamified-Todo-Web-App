@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --accent: #a855f7;
+  --accent-glow: rgba(168, 85, 247, 0.6);
+  --gold: #fbbf24;
+  --xp-blue: #3b82f6;
+  --scrollbar-size: 12px;
+  --scrollbar-track: rgba(255, 255, 255, 0.04);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+  --scrollbar-chevron: rgba(255, 255, 255, 0.36);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(180deg, #0a0a0f 0%, #12121a 100%);
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+.font-display {
+  font-family: 'Orbitron', sans-serif;
+}
+
+.text-glow {
+  text-shadow: 0 0 10px var(--accent-glow), 0 0 20px var(--accent-glow);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.6), 0 0 20px rgba(251, 191, 36, 0.4);
+}
+
+.card-glass {
+  background: rgba(20, 20, 30, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 16px;
+}
+
+.card-dark {
+  background: linear-gradient(135deg, #1a1a24 0%, #12121a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.xp-bar {
+  background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+  border-radius: 9999px;
+  height: 100%;
+  transition: width 0.5s ease-out;
+}
+
+.gold-text {
+  color: #fbbf24;
+}
+
+.neon-border {
+  border: 2px solid transparent;
+  background: linear-gradient(#12121a, #12121a) padding-box,
+              linear-gradient(135deg, #7c3aed, #ec4899) border-box;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+@keyframes xp-gain {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-30px) scale(1.2); opacity: 0; }
+}
+
+.xp-animation {
+  animation: xp-gain 1s ease-out forwards;
+}
+
+.heatmap-cell {
+  transition: all 0.2s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.2);
+}
+
+/* Animated chevron scrollbar (downward motion) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background-image:
+    repeating-linear-gradient(135deg, transparent 0 35%, var(--scrollbar-chevron) 35% 50%, transparent 50% 100%),
+    repeating-linear-gradient(45deg, transparent 0 35%, var(--scrollbar-chevron) 35% 50%, transparent 50% 100%);
+  background-size: 10px 10px;
+  animation: scroll-chevron 1.2s linear infinite;
+}
+
+@keyframes scroll-chevron {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 0 10px, 0 10px; }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.writing-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Arrow scroll indicator (shows when content can scroll) */
+.scroll-indicator-arrow {
+  width: 32px;
+  height: 24px;
+  background: linear-gradient(180deg, #d3d3d3 0%, #0a0a0f 100%);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9' /%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9' /%3E%3C/svg%3E") center/contain no-repeat;
+  opacity: 0.8;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
+}
+
+@keyframes scroll-indicator {
+  0% { transform: translateY(0); opacity: 0.8; }
+  50% { transform: translateY(8px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0.8; }
+}
+
+.animate-scroll-indicator {
+  animation: scroll-indicator 1.2s ease-in-out infinite;
+}
+
+html, body, #root {
+  width: 100%;
+  overflow-x: hidden;
+}
