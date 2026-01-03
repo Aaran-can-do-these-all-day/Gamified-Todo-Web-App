@@ -1,6 +1,18 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { usePlayer } from "../context/PlayerContext";
 import DailyBriefingModal from "./DailyBriefingModal";
+import useScrollIndicator from "../hooks/useScrollIndicator";
+import ScrollIndicator from "./ScrollIndicator";
+import useVisions from "../hooks/useVisions";
+import useActionPlan from "../hooks/useActionPlan";
+import {
+  getAntiProcrastinationWarning,
+  getTodayMotivation,
+  generateQuests,
+  getTodayAlignmentHistory,
+  calculateAlignmentScore,
+  generateAlignmentSummary,
+} from "../utils/motivationEngine";
 import {
   Power,
   Flame,
@@ -26,12 +38,17 @@ const DAILY_DIRECTIVES = [
 function SystemPanel() {
   const { player, streakMultiplier, activateSystem, deactivateSystem } = usePlayer();
   const [showBriefingModal, setShowBriefingModal] = useState(false);
+  const { visionAnswers, antiVisionAnswers } = useVisions();
+  const { actionPlan, updateActionPlan } = useActionPlan();
 
   const dailyDirective = useMemo(() => {
     return DAILY_DIRECTIVES[
       Math.floor(Math.random() * DAILY_DIRECTIVES.length)
     ];
   }, []);
+
+  const scrollRef = useRef(null);
+  const { canScroll, atBottom } = useScrollIndicator(scrollRef);
 
   const handlePowerButtonClick = () => {
     setShowBriefingModal(true);
@@ -42,16 +59,53 @@ function SystemPanel() {
     setShowBriefingModal(false);
   };
 
+  const motivationText = useMemo(
+    () => getTodayMotivation(antiVisionAnswers, visionAnswers, actionPlan),
+    [antiVisionAnswers, visionAnswers, actionPlan],
+  );
+
+  const generatedQuests = useMemo(
+    () => generateQuests(visionAnswers),
+    [visionAnswers],
+  );
+
+  const inactiveHours = useMemo(() => {
+    const last = player?.lastLoginDate ? new Date(player.lastLoginDate) : null;
+    if (!last) return 0;
+    const diffMs = Date.now() - last.getTime();
+    return Math.max(0, diffMs / (1000 * 60 * 60));
+  }, [player?.lastLoginDate]);
+
+  const warningText = useMemo(
+    () => getAntiProcrastinationWarning(inactiveHours, 0, Object.values(antiVisionAnswers || {})[0] || ""),
+    [inactiveHours, antiVisionAnswers],
+  );
+
+  const history = useMemo(
+    () => getTodayAlignmentHistory(actionPlan, []),
+    [actionPlan],
+  );
+
+  const alignmentScore = useMemo(
+    () => calculateAlignmentScore(history),
+    [history],
+  );
+
+  const alignmentSummary = useMemo(
+    () => generateAlignmentSummary(alignmentScore),
+    [alignmentScore],
+  );
+
   // If system is not activated, show minimal UI with Power Button
   if (!player.systemActivated) {
     return (
       <>
-        <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col items-center justify-center p-8">
+        <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col items-center justify-center p-8 max-h-[620px]">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 mb-4 border border-cyan-500/30">
+            <div className="inline-flex items-center justify-center w-20 h-20 -mt-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 mb-4 border border-cyan-500/30">
               <Power className="w-10 h-10 text-cyan-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">System Standby</h3>
+            <h3 className="text-xl font-bold text-white mb-2 ">System Standby</h3>
             <p className="text-sm text-gray-400 max-w-xs mx-auto">
               The System awaits activation. Complete your Daily Briefing to unlock your Hunter powers.
             </p>
@@ -70,6 +124,15 @@ function SystemPanel() {
           isOpen={showBriefingModal}
           onClose={() => setShowBriefingModal(false)}
           onInitialize={handleSystemInitialize}
+          visionAnswers={visionAnswers}
+          antiVisionAnswers={antiVisionAnswers}
+          actionPlan={actionPlan}
+          onActionPlanChange={updateActionPlan}
+          motivationText={motivationText}
+          warningText={warningText}
+          quests={generatedQuests}
+          alignmentScore={alignmentScore}
+          alignmentSummary={alignmentSummary}
         />
       </>
     );
@@ -84,8 +147,8 @@ function SystemPanel() {
 
   // Full System UI when activated
   return (
-    <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col max-h-[750px]">
-      <div className="p-4 flex-1 overflow-y-auto">
+    <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col max-h-[620px]">
+      <div className="relative p-3 sm:p-3.5 flex-1 overflow-y-auto scrollbar-hide" ref={scrollRef}>
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={deactivateSystem}
@@ -157,6 +220,8 @@ function SystemPanel() {
               </div>
               <p className="text-sm text-purple-300">{dailyDirective}</p>
             </div>
+
+
           </div>
         </div>
 
@@ -226,12 +291,10 @@ function SystemPanel() {
             Join the Hunter Guild (Discord)
           </a>
         </div>
+
+        <ScrollIndicator visible={canScroll && !atBottom} />
       </div>
 
-      <button className="w-full py-3 border-t border-white/10 text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
-        <Plus className="w-4 h-4" />
-        New page
-      </button>
     </div>
   );
 }

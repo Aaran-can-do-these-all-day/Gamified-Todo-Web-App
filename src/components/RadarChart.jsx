@@ -1,8 +1,17 @@
 import { usePlayer } from '../context/PlayerContext'
-import { Radar, RadarChart as RechartsRadar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts'
+import { Radar, RadarChart as RechartsRadar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts'
 
 function RadarChart() {
   const { player } = usePlayer()
+
+  const attributeLabels = {
+    FIT: 'Fitness',
+    SOC: 'Social',
+    INT: 'Intellect',
+    DIS: 'Discipline',
+    FOC: 'Focus / Execution',
+    FIN: 'Financial',
+  }
 
   const data = [
     { subject: 'FIT', value: player.attributes.fit, fullMark: 10 },
@@ -14,16 +23,10 @@ function RadarChart() {
   ]
 
   return (
-    <div className="bg-dark-800/80 rounded-lg border border-white/10 p-6 h-full flex flex-col max-h-[750px]">
-      <div className="text-center mb-2">
-        <p className="text-[10px] text-gray-500 tracking-widest uppercase">
-          "THE SYSTEM USES ME, AND I USE THE SYSTEM"
-        </p>
-      </div>
-      
-      <div className="flex-1 min-h-[280px]">
+    <div className="h-full max-h-[620px] flex flex-col">
+      <div className="flex-1 min-h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <RechartsRadar cx="50%" cy="50%" outerRadius="65%" data={data}>
+          <RechartsRadar cx="50%" cy="50%" outerRadius="95%" data={data}>
             <PolarGrid 
               stroke="#4B5563"
               strokeOpacity={0.6}
@@ -36,10 +39,25 @@ function RadarChart() {
             />
             <PolarRadiusAxis 
               angle={90} 
-              domain={[0, 9]} 
-              tick={{ fill: '#6B7280', fontSize: 9 }}
-              tickCount={10}
+              domain={[0, 10]} 
+              ticks={[1,2,3,4,5,6,7,8,9,10]}
+              tick={false}
+              tickLine={false}
               axisLine={false}
+            />
+            <Tooltip
+              formatter={(value, _name, entry) => [
+                `${value}/10`,
+                attributeLabels[entry?.payload?.subject] || entry?.payload?.subject,
+              ]}
+              labelFormatter={(label) => attributeLabels[label] || label}
+              contentStyle={{
+                backgroundColor: '#0f172a',
+                border: '1px solid #1f2937',
+                borderRadius: '8px',
+                color: '#e5e7eb',
+              }}
+              itemStyle={{ color: '#e5e7eb' }}
             />
             <Radar
               name="Stats"

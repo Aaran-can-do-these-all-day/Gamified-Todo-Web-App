@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { usePlayer } from '../context/PlayerContext'
 import { Zap, Coins, Plus } from 'lucide-react'
 
@@ -6,18 +7,20 @@ function PlayerCard() {
 
   const xpInCurrentLevel = player.xp - currentLevelXp
   const xpNeededForLevel = nextLevelXp - currentLevelXp
-  const segments = 10
-  const filledSegments = Math.floor((xpInCurrentLevel / xpNeededForLevel) * segments)
+  const progress = Math.max(Math.min(xpInCurrentLevel / xpNeededForLevel, 1), 0)
+  const statusText = player.systemActivated
+    ? 'On track — keep momentum.'
+    : 'System standby — initialize to boost.'
 
   return (
-    <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col max-h-[750px]">
-      <div className="p-4 flex-1 overflow-y-auto">
+    <div className="bg-dark-800/80 rounded-lg border border-white/10 h-full flex flex-col max-h-[620px]">
+      <div className="p-3 sm:p-3.5 flex-1 overflow-y-auto">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-gray-400">⚔️</span>
           <span className="text-white font-medium">{player.name}</span>
         </div>
         
-        <div className="relative w-full aspect-[4/3] mb-4 rounded-lg overflow-hidden bg-dark-900">
+        <div className="relative w-full aspect-[4/3] mb-3 rounded-lg overflow-hidden bg-dark-900">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-dark-900 to-dark-900" />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative">
@@ -36,25 +39,33 @@ function PlayerCard() {
           Level {level} <span className="text-purple-400">✦</span> | {player.title}
         </h3>
         
-        <div className="flex items-center gap-1 mb-4">
+        <div className="flex items-center gap-1 mb-2">
           <span className="text-sm" style={{ color: rank.color }}>
             Rank: {rank.name}
           </span>
           <span className="text-yellow-400 ml-1">★★★</span>
         </div>
 
+        <div className="mb-4 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2">
+          <p className="text-xs uppercase tracking-[0.2em] text-emerald-100/80">Status</p>
+          <p className="text-sm text-emerald-50">{statusText}</p>
+        </div>
+
         <div className="mb-3">
-          <div className="flex gap-0.5 mb-1">
-            {Array.from({ length: segments }).map((_, i) => (
-              <div 
-                key={i}
-                className={`h-3 flex-1 rounded-sm ${
-                  i < filledSegments 
-                    ? 'bg-gradient-to-r from-pink-500 to-purple-500' 
-                    : 'bg-dark-600'
-                }`}
-              />
-            ))}
+          <div className="relative h-3 w-full rounded-full bg-dark-700/70 overflow-hidden border border-white/5 mb-1">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress * 100}%` }}
+              transition={{ duration: 0.65, ease: 'easeOut' }}
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#22D3EE] via-[#34D399] to-[#A3E635]"
+            />
+            <div
+              className="absolute inset-0 pointer-events-none opacity-25 mix-blend-screen"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(90deg, transparent 0, transparent 9%, rgba(255,255,255,0.45) 9.5%, transparent 10%)',
+              }}
+            />
           </div>
           <div className="text-right text-xs text-gray-400">
             {xpInCurrentLevel}/{xpNeededForLevel} XP
@@ -80,10 +91,6 @@ function PlayerCard() {
         </div>
       </div>
 
-      <button className="w-full py-3 border-t border-white/10 text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
-        <Plus className="w-4 h-4" />
-        New page
-      </button>
     </div>
   )
 }

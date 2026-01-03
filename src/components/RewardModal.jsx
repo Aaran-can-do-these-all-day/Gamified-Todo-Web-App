@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Gift, Coins, Star, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
+import useScrollIndicator from "../hooks/useScrollIndicator";
+import ScrollIndicator from "./ScrollIndicator";
 
 function RewardModal({ onClose, onSubmit, submitting, error, tasks = [] }) {
   const [formState, setFormState] = useState({
@@ -80,6 +82,9 @@ function RewardModal({ onClose, onSubmit, submitting, error, tasks = [] }) {
 
   const canSubmit = formState.title.trim() && formState.cost && !isNaN(formState.cost) && parseInt(formState.cost) > 0;
 
+  const contentRef = useRef(null);
+  const { canScroll, atBottom } = useScrollIndicator(contentRef);
+
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
@@ -88,7 +93,7 @@ function RewardModal({ onClose, onSubmit, submitting, error, tasks = [] }) {
       onMouseDown={handleOverlayMouseDown}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-xl border border-white/10 bg-[#191919] shadow-2xl flex flex-col text-[#d3d3d3]"
+        className="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-xl border border-white/10 bg-[#191919] shadow-2xl flex flex-col text-[#d3d3d3]"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -109,7 +114,7 @@ function RewardModal({ onClose, onSubmit, submitting, error, tasks = [] }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="relative flex-1 overflow-y-auto p-6 scrollbar-hide" ref={contentRef}>
           {/* Title Input */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -380,6 +385,8 @@ function RewardModal({ onClose, onSubmit, submitting, error, tasks = [] }) {
             </button>
           </div>
         </div>
+
+        <ScrollIndicator visible={canScroll && !atBottom} />
       </div>
     </div>
   );

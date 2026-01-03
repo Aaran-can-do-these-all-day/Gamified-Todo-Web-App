@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { usePlayer } from '../context/PlayerContext'
-import { Clock, Zap, Coins, Check, X, AlertCircle } from 'lucide-react'
+import { Clock, Zap, Coins, Check, X, AlertCircle, Tag, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const difficultyColors = {
@@ -24,7 +24,17 @@ const categoryColors = {
 function TaskCard({ task, onComplete, onFail }) {
   const { completeTask } = usePlayer()
   const [showXpGain, setShowXpGain] = useState(false)
-  const [isCompleted, setIsCompleted] = useState(task.completed || false)
+  const initialCompleted =
+    task.status === 'Completed' || task.completed === true
+  const [isCompleted, setIsCompleted] = useState(initialCompleted)
+
+  const coverStyle = task.coverUrl
+    ? {
+        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.65) 100%), url(${task.coverUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }
+    : undefined
 
   const handleComplete = () => {
     if (isCompleted) return
@@ -43,7 +53,10 @@ function TaskCard({ task, onComplete, onFail }) {
       whileHover={{ scale: 1.02 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="h-32 bg-gradient-to-br from-purple-900/50 to-pink-900/50 relative overflow-hidden">
+      <div
+        className="h-32 bg-gradient-to-br from-purple-900/50 to-pink-900/50 relative overflow-hidden"
+        style={coverStyle}
+      >
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cg%20fill-opacity%3D%22.05%22%3E%3Ccircle%20fill%3D%22%23FFF%22%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2240%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
         <AnimatePresence>
           {showXpGain && (
@@ -76,6 +89,16 @@ function TaskCard({ task, onComplete, onFail }) {
               {task.category}
             </span>
           )}
+          {task.streakMultiplier && (
+            <span className="inline-block px-2 py-0.5 rounded text-xs font-medium border border-purple-500/30 bg-purple-500/10 text-purple-200">
+              {task.streakMultiplier}
+            </span>
+          )}
+          {task.status && (
+            <span className="inline-block px-2 py-0.5 rounded text-xs font-medium border border-white/10 text-white/80">
+              {task.status}
+            </span>
+          )}
         </div>
 
         <div className="mt-3 space-y-1 text-sm">
@@ -97,6 +120,25 @@ function TaskCard({ task, onComplete, onFail }) {
             <AlertCircle className="w-4 h-4" />
             <span>Deadline: {task.deadline}</span>
           </div>
+          {task.notes ? (
+            <div className="flex items-start gap-2 text-gray-300">
+              <Sparkles className="w-4 h-4 text-purple-300" />
+              <span className="text-sm text-white/80">{task.notes}</span>
+            </div>
+          ) : null}
+          {Array.isArray(task.tags) && task.tags.length > 0 ? (
+            <div className="flex flex-wrap gap-1 pt-1">
+              {task.tags.map((tagLabel) => (
+                <span
+                  key={tagLabel}
+                  className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-white/80"
+                >
+                  <Tag className="h-3 w-3 text-white/60" />
+                  {tagLabel}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10">

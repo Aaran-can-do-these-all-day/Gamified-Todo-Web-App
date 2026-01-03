@@ -3,6 +3,12 @@ import TopNav from "../components/TopNav";
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
+  Home,
+  Power,
+  Sword,
+  Flame,
+  Target,
+  Settings,
   ShieldPlus,
   Eye,
   Zap,
@@ -22,6 +28,24 @@ import {
 
 const sectionCard =
   "rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-black/60 p-6 backdrop-blur";
+
+const pageStagger = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.08, delayChildren: 0.08 },
+  },
+};
+
+const cardRise = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 140, damping: 18 },
+  },
+};
 
 function StatTag({ label, value }) {
   return (
@@ -257,8 +281,16 @@ function Equippables() {
   return (
     <div className="min-h-screen bg-[#03040a]">
       <TopNav />
-      <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
-        <header className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-500/10 via-purple-500/5 to-transparent p-8">
+      <motion.div
+        className="max-w-7xl mx-auto px-4 py-10 space-y-8"
+        variants={pageStagger}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.header
+          className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-500/10 via-purple-500/5 to-transparent p-8"
+          variants={cardRise}
+        >
           <div className="flex flex-wrap items-center justify-between gap-6">
             <div>
               <p className="text-xs uppercase tracking-[0.5em] text-white/60">Loadout Systems</p>
@@ -283,9 +315,9 @@ function Equippables() {
               <span>Supabase upgrade next</span>
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3" >
             {loadoutOverview.map((item) => (
-              <div key={item.label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
+              <motion.div key={item.label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 px-4 py-3" variants={cardRise}>
                 <span className={`rounded-full border border-white/10 bg-black/70 p-3 ${item.accent}`}>
                   <item.icon className="h-5 w-5" />
                 </span>
@@ -293,12 +325,50 @@ function Equippables() {
                   <p className="text-xs uppercase tracking-[0.35em] text-white/60">{item.label}</p>
                   <p className="text-base font-semibold text-white">{item.value}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </header>
+        </motion.header>
 
-        <section className={sectionCard}>
+        <motion.div
+          className="flex flex-wrap justify-center gap-3 p-4 rounded-2xl border border-white/10 bg-white/5 shadow-[0_0_25px_rgba(255,255,255,0.08)]"
+          variants={pageStagger}
+        >
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/awakening"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Power className="w-4 h-4" /> Awakening
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/quests"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Sword className="w-4 h-4" /> Quests
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/habits"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Flame className="w-4 h-4" /> Habits
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/gates"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Target className="w-4 h-4" /> Gates
+            </NavLink>
+          </motion.div>
+        </motion.div>
+
+        <motion.section className={sectionCard} variants={cardRise}>
           <div className="mb-6 flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.5em] text-white/60">VISIONS</p>
@@ -309,19 +379,20 @@ function Equippables() {
               Slot allows 1 equipped vision.
             </span>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <motion.div className="grid gap-6 md:grid-cols-3" variants={pageStagger}>
             {visionLoadouts.map((vision) => (
-              <VisionCard
-                key={vision.id}
-                data={vision}
-                equipped={vision.id === equippedVisionId}
-                onEquip={equipVision}
-              />
+              <motion.div key={vision.id} variants={cardRise}>
+                <VisionCard
+                  data={vision}
+                  equipped={vision.id === equippedVisionId}
+                  onEquip={equipVision}
+                />
+              </motion.div>
             ))}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
-        <section className={sectionCard}>
+        <motion.section className={sectionCard} variants={cardRise}>
           <div className="mb-6 flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.5em] text-white/60">ANTI-VISION</p>
@@ -332,19 +403,20 @@ function Equippables() {
               One counter may be armed at a time.
             </span>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <motion.div className="grid gap-6 md:grid-cols-3" variants={pageStagger}>
             {antiVisionFragments.map((fragment) => (
-              <AntiVisionCard
-                key={fragment.id}
-                data={fragment}
-                armed={fragment.id === armedAntiVisionId}
-                onArm={equipAntiVision}
-              />
+              <motion.div key={fragment.id} variants={cardRise}>
+                <AntiVisionCard
+                  data={fragment}
+                  armed={fragment.id === armedAntiVisionId}
+                  onArm={equipAntiVision}
+                />
+              </motion.div>
             ))}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
-        <section className={sectionCard}>
+        <motion.section className={sectionCard} variants={cardRise}>
           <div className="mb-6 flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.5em] text-white/60">SHADOWS</p>
@@ -355,27 +427,28 @@ function Equippables() {
               Up to {maxShadows} shadows can be assigned.
             </span>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <motion.div className="grid gap-6 md:grid-cols-3" variants={pageStagger}>
             {shadowRoster.map((shadow) => {
               const isLocked = !unlockedShadowIds.includes(shadow.id);
               const isEquipped = equippedShadowIds.includes(shadow.id);
               const isDisabled = !isEquipped && equippedShadowIds.length >= maxShadows;
               
               return (
-                <ShadowCard
-                  key={shadow.id}
-                  data={shadow}
-                  equipped={isEquipped}
-                  disabled={isDisabled}
-                  locked={isLocked}
-                  onToggle={handleToggleShadow}
-                />
+                <motion.div key={shadow.id} variants={cardRise}>
+                  <ShadowCard
+                    data={shadow}
+                    equipped={isEquipped}
+                    disabled={isDisabled}
+                    locked={isLocked}
+                    onToggle={handleToggleShadow}
+                  />
+                </motion.div>
               );
             })}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
-        <footer className="mb-10 flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-gray-300">
+        <motion.footer className="mb-10 flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-gray-300" variants={cardRise}>
           <div className="flex flex-wrap items-center gap-3">{loadoutSlots.map((slot) => (
             <span key={slot.id} className="rounded-full border border-white/10 px-4 py-2 text-xs">
               {slot.label}: {slot.max} slot{slot.max > 1 ? "s" : ""}
@@ -389,8 +462,8 @@ function Equippables() {
               Challenge New Gate
             </NavLink>
           </div>
-        </footer>
-      </div>
+        </motion.footer>
+      </motion.div>
     </div>
   );
 }

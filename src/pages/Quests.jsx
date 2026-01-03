@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
+import TopNav from "../components/TopNav";
 import {
   Home,
   Power,
   Flame,
   Target,
+  Sword,
   Plus,
   RefreshCw,
   X,
@@ -18,13 +20,35 @@ import {
   ChevronDown,
   CheckCircle2,
   Sigma,
+  Settings,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePlayer } from "../context/PlayerContext";
 import TaskCard from "../components/TaskCard";
 import PomodoroTimer from "../components/PomodoroTimer";
+import HabitQuestDemo from "../components/HabitQuestDemo";
 import useTasks from "../hooks/useTasks";
 import { calculateRewards } from "../api/tasks";
+import useScrollIndicator from "../hooks/useScrollIndicator";
+import ScrollIndicator from "../components/ScrollIndicator";
+
+const pageStagger = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.08, delayChildren: 0.08 },
+  },
+};
+
+const cardRise = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 140, damping: 18 },
+  },
+};
 
 const fallbackSeedTasks = [
   {
@@ -165,7 +189,11 @@ const mapRemoteTaskToCard = (task) => {
     credits: task.goldReward ?? task.credits ?? 0,
     xp: task.xpReward ?? task.xp ?? 0,
     deadline: task.deadlineLabel ?? task.deadline ?? "Today",
+    status: task.completed ? "Completed" : "Not Started",
     completed: Boolean(task.completed),
+    streakMultiplier: task.streakMultiplierLabel ?? null,
+    notes: task.notes ?? "",
+    tags: Array.isArray(task.tags) ? task.tags : [],
   };
 };
 
@@ -178,6 +206,11 @@ const defaultFormState = {
   start: "",
   end: "",
   icon: "",
+  streakMultiplier: "1x",
+  status: "Not Started",
+  notes: "",
+  tags: "",
+  coverUrl: "",
 };
 
 function Quests() {
@@ -238,7 +271,7 @@ function Quests() {
             startDateValue.toISOString(),
             endDateValue.toISOString(),
             formState.difficulty,
-            streakMultiplier,
+            parseFloat(formState.streakMultiplier) || streakMultiplier,
           );
           return {
             xp,
@@ -274,7 +307,9 @@ function Quests() {
 
     setFallbackTasks((prev) =>
       prev.map((task) =>
-        task.id === taskId ? { ...task, completed: true } : task,
+        task.id === taskId
+          ? { ...task, completed: true, status: "Completed" }
+          : task,
       ),
     );
   };
@@ -294,7 +329,11 @@ function Quests() {
       return;
     }
 
-    setFallbackTasks((prev) => prev.filter((t) => t.id !== taskId));
+    setFallbackTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, status: "Failed", completed: false } : task,
+      ),
+    );
   };
 
   const handleCreateQuest = async () => {
@@ -329,16 +368,20 @@ function Quests() {
           startTime: startDate.toISOString(),
           endTime: endDate.toISOString(),
           icon: formState.icon?.trim() || null,
-          streakMultiplier,
+          streakMultiplier: parseFloat(formState.streakMultiplier) || streakMultiplier,
         });
       } else {
         const { xp, gold, durationMinutes } = calculateRewards(
           startDate.toISOString(),
           endDate.toISOString(),
           formState.difficulty,
-          streakMultiplier,
+          parseFloat(formState.streakMultiplier) || streakMultiplier,
         );
 
+        const tags = formState.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean);
         const newTask = {
           id: Date.now(),
           title: trimmedTitle,
@@ -350,7 +393,12 @@ function Quests() {
           credits: gold,
           xp,
           deadline: formatDeadlineLabel(durationMinutes),
-          completed: false,
+          completed: formState.status === "Completed",
+          status: formState.status || "Not Started",
+          streakMultiplier: formState.streakMultiplier || "1x",
+          notes: formState.notes?.trim() || "",
+          tags,
+          coverUrl: formState.coverUrl?.trim() || "",
         };
 
         setFallbackTasks((prev) => [newTask, ...prev]);
@@ -365,60 +413,65 @@ function Quests() {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="h-48 bg-gradient-to-b from-purple-900/30 to-transparent relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cg%20fill-opacity%3D%22.03%22%3E%3Ccircle%20fill%3D%22%23a855f7%22%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2240%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] bg-repeat" />
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-dark-900 to-transparent" />
-        <div className="absolute top-4 left-4">
-          <div className="w-10 h-10 rounded-full bg-purple-600/30 flex items-center justify-center">
-            <span className="text-xl">📋</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 -mt-20 relative z-10">
-        <motion.h1
-          className="font-display text-4xl font-bold text-white mb-6"
+    <div className="min-h-screen bg-[#0a0a0f]">
+      <TopNav />
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <motion.div
+          className="text-center mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          Quests
-        </motion.h1>
+          <p className="text-xs font-semibold tracking-[0.6em] text-white/35 uppercase">
+            System Directives
+          </p>
+          <h1 className="mt-3 font-display text-4xl md:text-5xl font-black tracking-[0.35em] bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-500 bg-clip-text text-transparent drop-shadow-[0_14px_50px_rgba(168,85,247,0.35)]">
+            QUESTS
+          </h1>
+          <p className="mt-4 text-sm uppercase tracking-[0.5em] text-white/60">
+            クエスト
+          </p>
+        </motion.div>
 
-        <div className="flex flex-wrap gap-3 mb-8">
-          <NavLink
-            to="/"
-            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Home className="w-4 h-4" /> Return Home
-          </NavLink>
-          <NavLink
-            to="/awakening"
-            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Power className="w-4 h-4" /> Awakening
-          </NavLink>
-          <NavLink
-            to="/habits"
-            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Flame className="w-4 h-4" /> Habits
-          </NavLink>
-          <NavLink
-            to="/gates"
-            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Target className="w-4 h-4" /> Gates
-          </NavLink>
-        </div>
+        <motion.div
+          className="flex flex-wrap justify-center gap-3 p-4 rounded-2xl border border-white/10 bg-white/5 shadow-[0_0_25px_rgba(255,255,255,0.08)] mb-10"
+          variants={pageStagger}
+        >
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/awakening"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Power className="w-4 h-4" /> Awakening
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/habits"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Flame className="w-4 h-4" /> Habits
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/gates"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Target className="w-4 h-4" /> Gates
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/equippables"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" /> Loadout
+            </NavLink>
+          </motion.div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xl">📋</span>
-              <h2 className="text-xl font-semibold text-purple-400">Quests</h2>
-            </div>
-
             <div className="flex flex-col gap-3 mb-4">
               {supabaseReady ? (
                 <div className="flex items-center justify-between text-xs text-gray-400">
@@ -454,7 +507,7 @@ function Quests() {
               )}
             </div>
 
-            <div className="flex gap-4 mb-6">
+            <div className="flex flex-wrap items-center gap-3 mb-6">
               <button
                 onClick={() => setFilter("today")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -475,9 +528,15 @@ function Quests() {
               >
                 ✅ Completed
               </button>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="ml-auto px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" /> New Quest
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {visibleTasks.length === 0 && (
                 <div className="col-span-full rounded-2xl border border-dashed border-white/12 bg-dark-800/40 px-6 py-10 text-center text-white/70">
                   <p className="text-lg font-semibold">
@@ -505,18 +564,14 @@ function Quests() {
                 </motion.div>
               ))}
             </div>
-
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-full mt-4 py-3 rounded-lg border-2 border-dashed border-gray-600 text-gray-300 hover:border-purple-500 hover:text-purple-400 transition-colors flex items-center justify-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              New Quest
-            </button>
           </div>
 
           <div>
             <PomodoroTimer />
+          </div>
+          <div>
+            <HabitQuestDemo />
+        
           </div>
         </div>
       </div>
@@ -555,6 +610,10 @@ function QuestModal({
   streakMultiplier,
   categoryOptions,
 }) {
+  const scrollRef = useRef(null);
+  const { canScroll, atBottom } = useScrollIndicator(scrollRef);
+  const localCoverUrlRef = useRef(null);
+  const fileInputRef = useRef(null);
   const hasScheduleInput = formState.start && formState.end;
   const showScheduleWarning = hasScheduleInput && !scheduleValid;
   const categoriesToShow =
@@ -568,6 +627,29 @@ function QuestModal({
     }
   };
 
+  const coverPreviewUrl = localCoverUrlRef.current || formState.coverUrl?.trim();
+
+  const coverStyle = coverPreviewUrl
+    ? {
+        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%), url(${coverPreviewUrl})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    : {
+        background: "linear-gradient(135deg, #0f172a 0%, #111827 50%, #0b0f1a 100%)",
+      };
+
+  const handleLocalCoverChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (localCoverUrlRef.current) {
+      URL.revokeObjectURL(localCoverUrlRef.current);
+    }
+    const objectUrl = URL.createObjectURL(file);
+    localCoverUrlRef.current = objectUrl;
+    setFormState((prev) => ({ ...prev }));
+  };
+
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
@@ -579,6 +661,39 @@ function QuestModal({
         className="w-full max-w-3xl h-[85vh] overflow-hidden rounded-xl border border-white/10 bg-[#191919] shadow-2xl flex flex-col text-[#d3d3d3]"
         onMouseDown={(e) => e.stopPropagation()}
       >
+        {/* Cover Image Preview */}
+        <div className="relative h-48 w-full overflow-hidden" style={coverStyle}>
+          <div className="h-full w-full" />
+          <div className="absolute inset-0 flex items-start justify-end p-3">
+            <button
+              type="button"
+              onClick={() => {
+                const next = window.prompt("Paste cover image URL", formState.coverUrl || "");
+                if (next !== null) {
+                  setFormState((prev) => ({ ...prev, coverUrl: next.trim() }));
+                }
+              }}
+              className="rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white backdrop-blur hover:bg-black/70 border border-white/15"
+            >
+              Change cover
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="ml-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white backdrop-blur hover:bg-black/70 border border-white/15"
+            >
+              Upload cover
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLocalCoverChange}
+            />
+          </div>
+        </div>
+
         {/* Header Actions */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
           <div className="flex items-center gap-2">
@@ -612,7 +727,7 @@ function QuestModal({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div className="relative flex-1 overflow-y-auto p-8 scrollbar-hide" ref={scrollRef}>
           {/* Title Input */}
           <div className="group mb-8">
             <input
@@ -630,13 +745,27 @@ function QuestModal({
           {/* Properties List */}
           <div className="space-y-1">
             {/* Streak Multiplier */}
-            <div className="flex items-center h-9 group">
+            <div className="flex items-center min-h-9 group py-1 hover:bg-white/5 -mx-2 px-2 rounded transition-colors">
               <div className="w-[160px] flex items-center gap-2 text-sm text-white/40">
                 <Target size={14} />
                 <span>Streak Multiplier</span>
               </div>
-              <div className="flex-1 text-sm text-yellow-400 font-medium">
-                {streakMultiplier ? `${streakMultiplier.toFixed(1)}x` : "1.0x"}
+              <div className="flex-1">
+                <select
+                  value={formState.streakMultiplier}
+                  onChange={(e) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      streakMultiplier: e.target.value,
+                    }))
+                  }
+                  className="bg-[#232b36] text-[#facc15] px-3 py-1.5 rounded text-sm border-none focus:ring-0 cursor-pointer hover:bg-[#2c3642] transition-colors min-w-[120px]"
+                >
+                  <option value="1x">1x</option>
+                  <option value="1.3x">1.3x</option>
+                  <option value="1.5x">1.5x</option>
+                  <option value="2x">2x</option>
+                </select>
               </div>
             </div>
 
@@ -709,17 +838,25 @@ function QuestModal({
               </div>
             </div>
 
-            {/* Completed (Status) */}
-            <div className="flex items-center h-9 group">
+            {/* Status */}
+            <div className="flex items-center min-h-9 group py-1 hover:bg-white/5 -mx-2 px-2 rounded transition-colors">
               <div className="w-[160px] flex items-center gap-2 text-sm text-white/40">
                 <CheckCircle2 size={14} />
                 <span>Status</span>
               </div>
-              <div className="flex-1 flex items-center">
-                <span className="bg-[#1c3829] text-[#4ade80] px-2 py-0.5 rounded text-sm flex items-center gap-1">
-                  Not Started{" "}
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#4ade80]"></div>
-                </span>
+              <div className="flex-1">
+                <select
+                  value={formState.status}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, status: e.target.value }))
+                  }
+                  className="bg-[#1f2a2f] text-[#67e8f9] px-3 py-1.5 rounded text-sm border-none focus:ring-0 cursor-pointer hover:bg-[#26343b] transition-colors min-w-[150px]"
+                >
+                  <option value="Not Started">Not Started</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Failed">Failed</option>
+                </select>
               </div>
             </div>
 
@@ -816,15 +953,62 @@ function QuestModal({
                 <Paperclip size={14} />
                 <span>Files & media</span>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <input
                   type="text"
                   value={formState.icon}
                   onChange={(e) =>
                     setFormState((prev) => ({ ...prev, icon: e.target.value }))
                   }
-                  placeholder="Empty"
-                  className="w-full bg-transparent text-sm text-white placeholder:text-white/20 focus:outline-none"
+                  placeholder="Emoji or icon"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+                />
+                <input
+                  type="text"
+                  value={formState.coverUrl}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, coverUrl: e.target.value }))
+                  }
+                  placeholder="Cover image URL"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="flex items-start group hover:bg-white/5 -mx-2 px-2 rounded transition-colors py-2">
+              <div className="w-[160px] flex items-center gap-2 text-sm text-white/40 mt-1">
+                <MessageSquare size={14} />
+                <span>Notes</span>
+              </div>
+              <div className="flex-1">
+                <textarea
+                  rows={2}
+                  value={formState.notes}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder="What does success look like?"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 p-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-purple-400"
+                />
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="flex items-center min-h-9 group hover:bg-white/5 -mx-2 px-2 rounded transition-colors py-2">
+              <div className="w-[160px] flex items-center gap-2 text-sm text-white/40">
+                <ChevronDown size={14} />
+                <span>Tags (comma-separated)</span>
+              </div>
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={formState.tags}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, tags: e.target.value }))
+                  }
+                  placeholder="e.g., Coding, Sprint, Focus"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
                 />
               </div>
             </div>
@@ -885,6 +1069,7 @@ function QuestModal({
               {submitting ? "Creating..." : "Create Quest"}
             </button>
           </div>
+          <ScrollIndicator visible={canScroll && !atBottom} />
         </div>
       </div>
     </div>

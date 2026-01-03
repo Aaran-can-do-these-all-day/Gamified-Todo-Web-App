@@ -4,8 +4,27 @@ import { usePlayer } from "../context/PlayerContext";
 import useTasks from "../hooks/useTasks";
 import RewardCard from "../components/RewardCard";
 import RewardModal from "../components/RewardModal";
-import { Plus, Coins, Gift, Clock, Zap } from "lucide-react";
+import { Plus, Coins, Gift, Clock, Zap, Home, Power, Sword, Flame, Target, Settings } from "lucide-react";
 import { motion } from "framer-motion";
+import { NavLink } from "react-router-dom";
+
+const pageStagger = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.08, delayChildren: 0.08 },
+  },
+};
+
+const cardRise = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 140, damping: 18 },
+  },
+};
 
 const initialRewards = [
   {
@@ -141,25 +160,122 @@ function Rewards() {
 
   const claimedRewards = rewards.filter((r) => r.claimed);
 
-  return (
-    <div className="min-h-screen">
-      <TopNav />
-      <div className="h-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-purple-900/30" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="h-1 w-full max-w-4xl bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-pulse" />
-        </div>
-      </div>
+  const totalGoldSpent = claimedRewards.reduce(
+    (sum, reward) => sum + (reward.cost ?? 0),
+    0,
+  );
+  const totalAvailableGold = player?.gold ?? 0;
+  const totalGoldCollected = totalGoldSpent + totalAvailableGold;
+  const totalXpClaimed = taskLog.reduce((sum, task) => sum + (task.xp ?? 0), 0);
+  const totalXpReduced = 0; // Placeholder until a penalty/xp-reduction source is added
+  const totalPenalties = 0; // Placeholder until penalty data is available
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Gift className="w-5 h-5 text-purple-400" />
-              <h2 className="text-xl font-semibold text-purple-400">
-                Reward Centre
-              </h2>
+  const formatNumber = (value) => Number(value ?? 0).toLocaleString();
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f]">
+      <TopNav />
+      <motion.div
+        className="max-w-7xl mx-auto px-4 py-8"
+        initial="hidden"
+        animate="show"
+        variants={pageStagger}
+      >
+        <motion.div className="text-center mb-12" variants={cardRise}>
+          <p className="text-xs font-semibold tracking-[0.6em] text-white/35 uppercase">
+            Treasure Vault
+          </p>
+          <h1 className="mt-3 font-display text-4xl md:text-5xl font-black tracking-[0.35em] bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_14px_50px_rgba(251,191,36,0.35)]">
+            REWARDS
+          </h1>
+          <p className="mt-4 text-sm uppercase tracking-[0.5em] text-white/60">
+            報酬
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-10"
+          variants={pageStagger}
+        >
+          <motion.div
+            className="rounded-2xl border border-white/10 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-4 shadow-[0_0_25px_rgba(251,191,36,0.15)]"
+            variants={cardRise}
+          >
+            <div className="flex items-center gap-3 text-amber-300">
+              <Coins className="w-5 h-5" />
+              <p className="text-xs uppercase tracking-[0.3em] text-white/70">
+                Total Gold Collected
+              </p>
             </div>
+            <p className="text-3xl font-bold text-white mt-2">
+              {formatNumber(totalGoldCollected)} G
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="rounded-2xl border border-white/10 bg-gradient-to-br from-yellow-400/10 via-yellow-400/5 to-transparent p-4"
+            variants={cardRise}
+          >
+            <div className="flex items-center gap-3 text-yellow-300">
+              <Coins className="w-5 h-5" />
+              <p className="text-xs uppercase tracking-[0.3em] text-white/70">
+                Total Available Gold
+              </p>
+            </div>
+            <p className="text-3xl font-bold text-white mt-2">
+              {formatNumber(totalAvailableGold)} G
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent p-4"
+            variants={cardRise}
+          >
+            <div className="flex items-center gap-3 text-blue-300">
+              <Zap className="w-5 h-5" />
+              <p className="text-xs uppercase tracking-[0.3em] text-white/70">
+                Total XP Claimed
+              </p>
+            </div>
+            <p className="text-3xl font-bold text-white mt-2">
+              {formatNumber(totalXpClaimed)} XP
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="rounded-2xl border border-white/10 bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent p-4"
+            variants={cardRise}
+          >
+            <div className="flex items-center gap-3 text-red-300">
+              <Zap className="w-5 h-5" />
+              <p className="text-xs uppercase tracking-[0.3em] text-white/70">
+                Total XP Reduced
+              </p>
+            </div>
+            <p className="text-3xl font-bold text-white mt-2">
+              {formatNumber(totalXpReduced)} XP
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent p-4"
+            variants={cardRise}
+          >
+            <div className="flex items-center gap-3 text-purple-300">
+              <Target className="w-5 h-5" />
+              <p className="text-xs uppercase tracking-[0.3em] text-white/70">
+                Total Penalties
+              </p>
+            </div>
+            <p className="text-3xl font-bold text-white mt-2">
+              {formatNumber(totalPenalties)}
+            </p>
+          </motion.div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_0.8fr] gap-8">
+          <div>
+            
 
             <div className="flex gap-4 mb-4">
               <button
@@ -198,7 +314,7 @@ function Rewards() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {(filter === "rewards"
                 ? rewards.filter((r) => !r.claimed)
                 : claimedRewards
@@ -266,7 +382,7 @@ function Rewards() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {isModalOpen && (
         <RewardModal

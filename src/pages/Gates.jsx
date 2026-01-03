@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { usePlayer } from "../context/PlayerContext";
 import BossCard from "../components/BossCard";
+import TopNav from "../components/TopNav";
 import { motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -10,10 +11,29 @@ import {
   Sword,
   Flame,
   Target,
+  Settings,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import useBosses from "../hooks/useBosses";
 import { bosses as fallbackBossesSeed } from "../data/bosses";
+
+const pageStagger = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.08, delayChildren: 0.08 },
+  },
+};
+
+const cardRise = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 140, damping: 18 },
+  },
+};
 
 const rankColor = (rank, fallback) => {
   switch (rank) {
@@ -87,6 +107,7 @@ function Gates() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
+      <TopNav />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <motion.div
           className="text-center mb-12"
@@ -104,32 +125,43 @@ function Gates() {
           </p>
         </motion.div>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-          <NavLink
-            to="/"
-            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Home className="w-4 h-4" /> Return Home
-          </NavLink>
-          <NavLink
-            to="/awakening"
-            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Power className="w-4 h-4" /> Awakening
-          </NavLink>
-          <NavLink
-            to="/quests"
-            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Sword className="w-4 h-4" /> Quests
-          </NavLink>
-          <NavLink
-            to="/habits"
-            className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Flame className="w-4 h-4" /> Habits
-          </NavLink>
-        </div>
+        <motion.div
+          className="flex flex-wrap justify-center gap-3 p-4 rounded-2xl border border-white/10 bg-white/5 shadow-[0_0_25px_rgba(255,255,255,0.08)] mb-12"
+          variants={pageStagger}
+        >
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/awakening"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Power className="w-4 h-4" /> Awakening
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/quests"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Sword className="w-4 h-4" /> Quests
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/habits"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Flame className="w-4 h-4" /> Habits
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/equippables"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" /> Loadout
+            </NavLink>
+          </motion.div>
+        </motion.div>
 
         <div className="flex flex-col gap-3 mb-6 text-xs text-gray-400">
           {supabaseReady ? (

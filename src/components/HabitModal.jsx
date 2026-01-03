@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
   Maximize2,
@@ -13,6 +13,8 @@ import {
   ChevronDown,
   Target,
 } from "lucide-react";
+import useScrollIndicator from "../hooks/useScrollIndicator";
+import ScrollIndicator from "./ScrollIndicator";
 
 function HabitModal({ isOpen, onClose, initialData }) {
   const [title, setTitle] = useState("");
@@ -28,6 +30,9 @@ function HabitModal({ isOpen, onClose, initialData }) {
       setIcon(initialData?.icon || "🏋️");
     }
   }, [isOpen, initialData]);
+
+  const scrollRef = useRef(null);
+  const { canScroll, atBottom } = useScrollIndicator(scrollRef);
 
   if (!isOpen) return null;
 
@@ -79,7 +84,7 @@ function HabitModal({ isOpen, onClose, initialData }) {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+        <div className="relative flex-1 overflow-y-auto scrollbar-hide" ref={scrollRef}>
           {/* Cover Image */}
           <div className="h-[30vh] w-full relative group">
             <img
@@ -210,6 +215,7 @@ function HabitModal({ isOpen, onClose, initialData }) {
               </div>
             </div>
           </div>
+          <ScrollIndicator visible={canScroll && !atBottom} />
         </div>
       </div>
     </div>

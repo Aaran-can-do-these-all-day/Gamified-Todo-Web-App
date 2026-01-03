@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { bosses } from "../data/bosses";
+import { incrementTaskCount, getTodayISO } from "../utils/taskCountTracker";
 
 const PlayerContext = createContext();
 
@@ -166,6 +167,9 @@ export function PlayerProvider({ children }) {
   };
 
   const completeTask = (xpReward, goldReward) => {
+    // Increment the task count for today
+    incrementTaskCount(getTodayISO(), 1);
+    
     setPlayer((prev) => ({
       ...prev,
       xp: prev.xp + xpReward,
