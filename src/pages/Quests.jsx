@@ -566,12 +566,9 @@ function Quests() {
             </div>
           </div>
 
-          <div>
+          <div className="space-y-6">
             <PomodoroTimer />
-          </div>
-          <div>
             <HabitQuestDemo />
-        
           </div>
         </div>
       </div>

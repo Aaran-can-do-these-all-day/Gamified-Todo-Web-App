@@ -204,18 +204,18 @@ function Awakening() {
         >
           <motion.div variants={cardRise}>
             <NavLink
-              to="/quests"
-              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-            >
-              <Sword className="w-4 h-4" /> Quests
-            </NavLink>
-          </motion.div>
-          <motion.div variants={cardRise}>
-            <NavLink
               to="/habits"
               className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
             >
               <Flame className="w-4 h-4" /> Habits
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/quests"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Sword className="w-4 h-4" /> Quests
             </NavLink>
           </motion.div>
           <motion.div variants={cardRise}>

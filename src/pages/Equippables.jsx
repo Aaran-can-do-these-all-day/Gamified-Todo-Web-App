@@ -344,18 +344,18 @@ function Equippables() {
           </motion.div>
           <motion.div variants={cardRise}>
             <NavLink
-              to="/quests"
-              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-            >
-              <Sword className="w-4 h-4" /> Quests
-            </NavLink>
-          </motion.div>
-          <motion.div variants={cardRise}>
-            <NavLink
               to="/habits"
               className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
             >
               <Flame className="w-4 h-4" /> Habits
+            </NavLink>
+          </motion.div>
+          <motion.div variants={cardRise}>
+            <NavLink
+              to="/quests"
+              className="px-4 py-2 rounded-full bg-dark-700 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Sword className="w-4 h-4" /> Quests
             </NavLink>
           </motion.div>
           <motion.div variants={cardRise}>
@@ -447,22 +447,6 @@ function Equippables() {
             })}
           </motion.div>
         </motion.section>
-
-        <motion.footer className="mb-10 flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-gray-300" variants={cardRise}>
-          <div className="flex flex-wrap items-center gap-3">{loadoutSlots.map((slot) => (
-            <span key={slot.id} className="rounded-full border border-white/10 px-4 py-2 text-xs">
-              {slot.label}: {slot.max} slot{slot.max > 1 ? "s" : ""}
-            </span>
-          ))}</div>
-          <div className="flex flex-wrap gap-3">
-            <NavLink to="/awakening" className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white/70 hover:bg-white/10">
-              Edit Vision Journal
-            </NavLink>
-            <NavLink to="/gates" className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white/70 hover:bg-white/10">
-              Challenge New Gate
-            </NavLink>
-          </div>
-        </motion.footer>
       </motion.div>
     </div>
   );

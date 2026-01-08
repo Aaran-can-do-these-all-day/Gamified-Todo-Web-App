@@ -1,10 +1,12 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePlayer } from "../context/PlayerContext";
 import DailyBriefingModal from "./DailyBriefingModal";
 import useScrollIndicator from "../hooks/useScrollIndicator";
 import ScrollIndicator from "./ScrollIndicator";
 import useVisions from "../hooks/useVisions";
 import useActionPlan from "../hooks/useActionPlan";
+import useLinkedHabitsStore from "../stores/linkedHabitsStore";
+import { rollEventForHabit, rollTimeBasedEvent } from "../utils/unpredictabilityEngine";
 import {
   getAntiProcrastinationWarning,
   getTodayMotivation,
@@ -22,6 +24,8 @@ import {
   Target,
   Plus,
   MessageCircle,
+  Zap,
+  Sparkles,
 } from "lucide-react";
 
 const DAILY_DIRECTIVES = [
@@ -40,12 +44,51 @@ function SystemPanel() {
   const [showBriefingModal, setShowBriefingModal] = useState(false);
   const { visionAnswers, antiVisionAnswers } = useVisions();
   const { actionPlan, updateActionPlan } = useActionPlan();
+  
+  // Get linked habits from the HabitQuestLinker store (source for unpredictability)
+  const { linkedHabits, getRandomLinkedHabit } = useLinkedHabitsStore();
+  const [randomEvent, setRandomEvent] = useState(null);
 
   const dailyDirective = useMemo(() => {
     return DAILY_DIRECTIVES[
       Math.floor(Math.random() * DAILY_DIRECTIVES.length)
     ];
   }, []);
+
+  // Generate random event from linked habits using unpredictabilityEngine
+  useEffect(() => {
+    if (!player.systemActivated || linkedHabits.length === 0) {
+      setRandomEvent(null);
+      return;
+    }
+
+    // Roll for event immediately
+    const rollNewEvent = () => {
+      const habit = getRandomLinkedHabit();
+      if (!habit) return;
+
+      // Try habit-based event first
+      const habitEvent = rollEventForHabit(habit, {
+        streak: habit.streak || 0,
+        missedCountLast7: 0,
+        daysRemaining: 0,
+      });
+
+      // Fallback to time-based event
+      const timeEvent = rollTimeBasedEvent(new Date());
+      const event = habitEvent || timeEvent;
+
+      if (event) {
+        setRandomEvent({ ...event, sourceHabit: habit });
+      }
+    };
+
+    rollNewEvent();
+
+    // Re-roll event every 5 minutes
+    const interval = setInterval(rollNewEvent, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [player.systemActivated, linkedHabits, getRandomLinkedHabit]);
 
   const scrollRef = useRef(null);
   const { canScroll, atBottom } = useScrollIndicator(scrollRef);
@@ -221,6 +264,77 @@ function SystemPanel() {
               <p className="text-sm text-purple-300">{dailyDirective}</p>
             </div>
 
+            {/* Random Event from Linked Habits (Unpredictability Engine) */}
+            {randomEvent && (
+              <div className="mt-2 pt-2 border-t border-white/10">
+                <div className="flex items-center gap-1 text-sm mb-1" style={{
+                  color: randomEvent.type === 'chaos_quest' ? '#f97316' :
+                         randomEvent.type === 'micro_reward' ? '#22c55e' :
+                         randomEvent.type === 'shadow_warning' ? '#ef4444' :
+                         randomEvent.type === 'pattern_break' ? '#a855f7' : '#06b6d4'
+                }}>
+                  {randomEvent.type === 'chaos_quest' && <Zap className="w-3 h-3" />}
+                  {randomEvent.type === 'micro_reward' && <Sparkles className="w-3 h-3" />}
+                  {randomEvent.type === 'shadow_warning' && <AlertTriangle className="w-3 h-3" />}
+                  {randomEvent.type === 'pattern_break' && <Target className="w-3 h-3" />}
+                  <span className="font-medium uppercase">
+                    {randomEvent.type === 'chaos_quest' ? '⚔️ CHAOS QUEST' :
+                     randomEvent.type === 'micro_reward' ? '✨ BONUS REWARD' :
+                     randomEvent.type === 'shadow_warning' ? '👁️ SHADOW WARNING' :
+                     randomEvent.type === 'pattern_break' ? '🔄 PATTERN BREAK' : 'RANDOM EVENT'}
+                  </span>
+                  {randomEvent.type === 'chaos_quest' && <Zap className="w-3 h-3" />}
+                  {randomEvent.type === 'micro_reward' && <Sparkles className="w-3 h-3" />}
+                </div>
+                
+                {randomEvent.type === 'chaos_quest' && randomEvent.quest && (
+                  <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-2 mt-1">
+                    <p className="text-sm text-orange-300 font-medium">{randomEvent.quest.title}</p>
+                    <p className="text-xs text-orange-200/70 mt-0.5">{randomEvent.quest.description}</p>
+                    <p className="text-xs text-amber-400 mt-1">+{randomEvent.quest.xp} XP • +{randomEvent.quest.credits} 💰</p>
+                  </div>
+                )}
+                
+                {randomEvent.type === 'micro_reward' && randomEvent.reward && (
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 mt-1">
+                    <p className="text-sm text-green-300">{randomEvent.reward.label}</p>
+                    <p className="text-xs text-green-200/60 mt-0.5">From: {randomEvent.sourceHabit?.name}</p>
+                  </div>
+                )}
+                
+                {randomEvent.type === 'shadow_warning' && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 mt-1">
+                    <p className="text-sm text-red-300">{randomEvent.message}</p>
+                  </div>
+                )}
+                
+                {randomEvent.type === 'pattern_break' && (
+                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-2 mt-1">
+                    <p className="text-sm text-purple-300">{randomEvent.title || 'Pattern Breaker'}</p>
+                    <p className="text-xs text-purple-200/70 mt-0.5">{randomEvent.message}</p>
+                  </div>
+                )}
+
+                {linkedHabits.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    🔗 {linkedHabits.length} habit{linkedHabits.length > 1 ? 's' : ''} linked
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Show hint when no habits are linked */}
+            {linkedHabits.length === 0 && (
+              <div className="mt-2 pt-2 border-t border-white/10">
+                <div className="flex items-center gap-1 text-cyan-400 text-sm mb-1">
+                  <Zap className="w-3 h-3" />
+                  <span className="font-medium">UNPREDICTABILITY ENGINE</span>
+                </div>
+                <p className="text-xs text-gray-400">
+                  Link habits in the Quest page to unlock random events!
+                </p>
+              </div>
+            )}
 
           </div>
         </div>
